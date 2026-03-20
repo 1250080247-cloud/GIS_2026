@@ -1,0 +1,40 @@
+{% extends 'store/base.html' %} 
+{% block title %}Đăng Nhập{% endblock %}
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-success text-white text-center py-3 rounded-top-4">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-person-circle"></i> Đăng Nhập Hệ Thống</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if form.errors %}
+                        <div class="alert alert-danger fw-bold small">Tên đăng nhập hoặc mật khẩu không đúng!</div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên đăng nhập</label>
+                            <input type="text" name="username" class="form-control rounded-3" required autofocus>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Mật khẩu</label>
+                            <input type="password" name="password" class="form-control rounded-3" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill shadow-sm py-2">ĐĂNG NHẬP</button>
+        
+        <div class="text-center mt-4">
+            <span class="text-muted">Chưa có tài khoản?</span>
+            <a href="{% url 'register' %}" class="text-success fw-bold text-decoration-none hover-zoom d-inline-block ms-1">
+                Đăng ký ngay
+            </a>
+        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

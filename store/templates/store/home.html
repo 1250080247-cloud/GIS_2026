@@ -1,0 +1,615 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty GIS - Mỹ Phẩm Chính Hãng</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'store/css/style.css' %}">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-brand sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bolder fs-4" href="{% url 'landing' %}">
+                <i class="bi bi-stars"></i> BEAUTY GIS STORE
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="text-white opacity-75 d-none d-md-block me-4">Hệ thống phân phối & Giao hàng thông minh</span>
+                
+                <div class="text-white position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#cartModal">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm" style="font-size: 0.65rem;">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="container mt-3 position-absolute start-50 translate-middle-x" style="z-index: 1050; max-width: 600px;">
+            {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show shadow-lg border-0 rounded-3">
+                <i class="bi bi-check-circle-fill text-success me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="container-fluid px-4 mt-4">
+        <div class="row g-4">
+            
+            <div class="col-lg-3 col-md-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-bag-heart-fill fs-3 text-brand me-2"></i>
+                    <h4 class="fw-bold mb-0 text-dark">Sản phẩm Hot</h4>
+                </div>
+                
+                <div class="product-scroll pe-2">
+                    {% for p in products %}
+                    <div class="product-card mb-3 p-2">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-4">
+                                <div class="product-img-wrapper rounded-3" style="height: 80px;">
+                                    {% if p.image %}
+                                    <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                                    {% else %}
+                                    <div class="text-muted small"><i class="bi bi-camera-fill"></i> No IMG</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <div class="ps-3">
+                                    <h6 class="fw-bold text-dark mb-1 text-truncate">{{ p.name }}</h6>
+                                    <p class="text-brand fw-bold mb-2">{{ p.price }} VNĐ</p>
+                                    
+                                    <button class="btn btn-sm btn-brand w-100 rounded-pill fw-bold" onclick="event.preventDefault(); addToCart('{{ p.id }}', '{{ p.name|escapejs }}', {{ p.price }})">
+                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="buyModal{{ p.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 overflow-hidden">
+                                <div class="modal-header bg-brand text-white">
+                                    <h5 class="modal-title"><i class="bi bi-bag-check"></i> Xác nhận đơn hàng</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-body p-4">
+                                        <div class="text-center mb-3">
+                                            <h5 class="fw-bold text-brand">{{ p.name }}</h5>
+                                            <p class="text-muted">{{ p.price }} VNĐ</p>
+                                        </div>
+                                        <input type="hidden" name="product_id" value="{{ p.id }}">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="name" class="form-control rounded-3" id="floatingName" placeholder="Tên" required>
+                                            <label for="floatingName">Họ và Tên</label>
+                                        </div>
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="phone" class="form-control rounded-3" id="floatingPhone" placeholder="SĐT" required>
+                                            <label for="floatingPhone">Số điện thoại</label>
+                                        </div>
+                                        <div class="form-floating mb-3">
+                                            <textarea name="address" class="form-control rounded-3" style="height: 100px" id="floatingAddr" placeholder="Địa chỉ" required></textarea>
+                                            <label for="floatingAddr">Địa chỉ nhận hàng</label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer bg-light">
+                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                                        <button type="submit" class="btn btn-brand rounded-pill px-4 shadow">Hoàn tất mua</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted"><p>Chưa có sản phẩm nào.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-9 col-md-8">
+                <div class="info-panel mb-4 d-flex flex-wrap align-items-center justify-content-between">
+                    <div class="mb-2 mb-md-0">
+                        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-geo-alt-fill text-brand"></i> Tìm Chi nhánh gần bạn</h5>
+                        <p id="radius-text" class="text-muted small mb-0">Tự động tìm Chi nhánh nhỏ gần nhất (Ưu tiên trong 3km)</p>
+                    </div>
+                    
+                    <div class="d-flex gap-3 align-items-center bg-light px-3 py-2 rounded-3">
+                        <div class="text-end">
+                            <div class="small text-muted">Khoảng cách</div>
+                            <strong id="distance" class="text-dark fs-5">0 km</strong>
+                        </div>
+                        <div class="vr"></div>
+                        <div class="text-end">
+                            <div class="small text-muted">Phí Ship</div>
+                            <strong id="shipping-fee" class="text-brand fs-4">0 ₫</strong>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row gap-2 mt-3 mt-md-0 align-items-md-center">
+                        
+                        <select id="radius-select" class="form-select shadow-sm fw-bold text-secondary" style="width: 140px;" onchange="updateRadius()">
+                            <option value="3">Dưới 3km</option>
+                            <option value="5">Dưới 5km</option>
+                            <option value="10">Dưới 10km</option>
+                        </select>
+                        <div class="input-group shadow-sm" style="max-width: 350px;">
+                            <input type="text" id="address-input" class="form-control" placeholder="Nhập địa chỉ của bạn...">
+                            <button class="btn btn-brand" type="button" onclick="searchAddress()">
+                                <i class="bi bi-search"></i> Tìm
+                            </button>
+                        </div>
+                        
+                        <button onclick="getLocation()" class="btn btn-outline-brand rounded px-3 shadow-sm text-nowrap" title="Lấy GPS hiện tại">
+                            <i class="bi bi-crosshair"></i>
+                        </button>
+                        <button id="clear-btn" onclick="clearSelection()" class="btn btn-outline-danger rounded px-3 shadow-sm text-nowrap" style="display: none;" title="Xóa bản đồ">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="map-container" class="position-relative">
+                    <div id="map"></div>
+                    <div id="status" class="position-absolute top-0 start-50 translate-middle-x mt-3 bg-white px-3 py-1 rounded-pill shadow-sm small fw-bold text-brand" style="z-index: 1000; display: none;">
+                        Đang tìm vị trí...
+                    </div>
+                    <div class="position-absolute bottom-0 start-0 m-3 bg-white p-2 rounded shadow small" style="z-index: 1000;">
+                        <div class="d-flex align-items-center mb-1"><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" height="15" class="me-2"> Trụ sở chính (Kho)</div>
+                        <div class="d-flex align-items-center"><img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png" height="15" class="me-2"> Chi nhánh nhỏ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% for branch in branches %}
+    <div class="modal fade" id="branchModal{{ branch.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header {% if branch.store_type == 'MAIN' %}bg-danger{% else %}bg-success{% endif %} text-white border-0 rounded-top-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-shop"></i> Thông Tin Chi Nhánh
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-4 text-center">
+                    
+                    {% if branch.image %}
+                        <img src="{{ branch.image.url }}" alt="{{ branch.name }}" class="img-fluid rounded-4 mb-3 shadow-sm" style="height: 200px; width: 100%; object-fit: cover;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/400x200.png?text=Chưa+có+ảnh+cửa+hàng" alt="No Image" class="img-fluid rounded-4 mb-3 shadow-sm border" style="height: 200px; width: 100%; object-fit: cover;">
+                    {% endif %}
+                    <h4 class="fw-bold text-dark mb-2">{{ branch.name }}</h4>
+                    <span class="badge {% if branch.store_type == 'MAIN' %}bg-danger{% else %}bg-success{% endif %} mb-3 px-3 py-2 rounded-pill shadow-sm">
+                        {% if branch.store_type == 'MAIN' %}TRỤ SỞ CHÍNH{% else %}CHI NHÁNH NHỎ{% endif %}
+                    </span>
+                    <hr class="text-muted opacity-25">
+                    
+                    <div class="text-start px-3">
+                        <p class="mb-3"><i class="bi bi-geo-alt-fill text-primary fs-5 me-2"></i> <b>Địa chỉ:</b> <br><span class="text-muted ms-4">{{ branch.address }}</span></p>
+                        <p class="mb-3"><i class="bi bi-telephone-fill text-success fs-5 me-2"></i> <b>Hotline:</b> <br><span class="text-muted ms-4">1900 xxxx (Đang cập nhật)</span></p>
+                        <p class="mb-0"><i class="bi bi-clock-fill text-warning fs-5 me-2"></i> <b>Giờ hoạt động:</b> <br><span class="text-muted ms-4">08:00 AM - 10:00 PM</span></p>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light justify-content-center border-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    
+    <script>
+        // 1. CẤU HÌNH BẢN ĐỒ
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' });
+        var satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { attribution: '© Google Maps' });
+
+        var map = L.map('map', {
+            center: [10.7769, 106.7009],
+            zoom: 13,
+            layers: [osmLayer] 
+        });
+
+        L.control.layers({ "Bản đồ Mặc định": osmLayer, "Bản đồ Vệ tinh": satelliteLayer }).addTo(map);
+
+        // 2. ICON & BIẾN
+        var userMarker = null;
+        var searchCircle = null;
+        var routingControl = null;
+        var subStores = []; 
+        
+        var currentUserLat = null;
+        var currentUserLon = null;
+
+        var mainIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+        var subIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+        var userIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+
+        // 3. LOAD DỮ LIỆU
+        {% for branch in branches %}
+            var lat = parseFloat("{{ branch.latitude }}".replace(',', '.'));
+            var lon = parseFloat("{{ branch.longitude }}".replace(',', '.'));
+            var name = "{{ branch.name }}";
+            var type = "{{ branch.store_type }}"; 
+            var address = "{{ branch.address }}";
+            var branchId = "{{ branch.id }}";
+
+            var iconToUse = (type === 'MAIN') ? mainIcon : subIcon;
+            var typeName = (type === 'MAIN') ? "TRỤ SỞ CHÍNH" : "CHI NHÁNH NHỎ";
+            var typeColor = (type === 'MAIN') ? "#dc3545" : "#198754";
+
+            var popupHTML = `
+                <div class="text-center" style="min-width: 150px;">
+                    <b style='color:${typeColor}; font-size: 0.8rem;'>${typeName}</b><br>
+                    <b class="text-dark fs-6">${name}</b><br>
+                    <button class="btn btn-sm btn-outline-dark mt-2 w-100 rounded-pill fw-bold" 
+                            onclick="new bootstrap.Modal(document.getElementById('branchModal${branchId}')).show()">
+                        <i class="bi bi-info-circle-fill text-primary"></i> Xem chi tiết
+                    </button>
+                </div>
+            `;
+
+            L.marker([lat, lon], {icon: iconToUse}).addTo(map)
+                .bindPopup(popupHTML);
+
+            subStores.push({ lat: lat, lng: lon, name: name });
+        {% endfor %}
+
+        // HÀM DỌN DẸP BẢN ĐỒ
+        function clearSelection() {
+            if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+            if (searchCircle) { map.removeLayer(searchCircle); searchCircle = null; }
+            if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+            
+            currentUserLat = null;
+            currentUserLon = null;
+
+            document.getElementById("distance").innerText = "0 km";
+            document.getElementById("shipping-fee").innerText = "0 ₫";
+            document.getElementById("clear-btn").style.display = "none";
+            
+            var radiusTextEl = document.getElementById("radius-text");
+            if(radiusTextEl) {
+                radiusTextEl.innerText = "Tự động tìm Chi nhánh nhỏ gần nhất (Ưu tiên trong 3km)";
+            }
+        }
+
+        function updateRadius() {
+            if (currentUserLat !== null && currentUserLon !== null) {
+                handleUserSelection(currentUserLat, currentUserLon);
+            }
+        }
+
+        // 4. XỬ LÝ LOGIC TÌM ĐƯỜNG
+        map.on('click', function(e) {
+            handleUserSelection(e.latlng.lat, e.latlng.lng);
+        });
+
+        // ===== CẬP NHẬT HÀM: THÊM BIẾN isFromOrder =====
+        function handleUserSelection(lat, lng, isFromOrder = false) {
+            currentUserLat = lat;
+            currentUserLon = lng;
+
+            if (userMarker) map.removeLayer(userMarker);
+            userMarker = L.marker([lat, lng], {icon: userIcon}).addTo(map)
+                .bindPopup("Vị trí bạn chọn").openPopup();
+
+            var selectEl = document.getElementById("radius-select");
+            var radiusKm = selectEl ? parseInt(selectEl.value) : 3;
+            var radius = radiusKm * 1000;
+
+            var radiusTextEl = document.getElementById("radius-text");
+            if(radiusTextEl) {
+                radiusTextEl.innerText = "Tự động tìm Chi nhánh nhỏ gần nhất (Ưu tiên trong " + radiusKm + "km)";
+            }
+
+            if (searchCircle) map.removeLayer(searchCircle);
+            
+            // CHỈ VẼ VÒNG TRÒN NẾU KHÔNG PHẢI LÀ ĐƠN HÀNG VỪA ĐẶT
+            if (!isFromOrder) {
+                searchCircle = L.circle([lat, lng], {
+                    color: '#198754', 
+                    fillColor: '#198754',
+                    fillOpacity: 0.1,
+                    radius: radius
+                }).addTo(map);
+            }
+
+            document.getElementById("clear-btn").style.display = "inline-block";
+
+            var result = findNearestStore(lat, lng, subStores);
+            
+            if (result.store) {
+                calculateRoute(L.latLng(lat, lng), L.latLng(result.store.lat, result.store.lng));
+
+                // Tạm tắt popup cảnh báo km nếu là đơn hàng để lát nữa hiện Popup "Đang chuẩn bị hàng"
+                if (!isFromOrder) {
+                    if (result.distance <= radius) {
+                        userMarker.bindPopup("<b>Vị trí bạn chọn</b><br><span class='text-success fw-bold'>Đã tìm thấy chi nhánh gần nhất!</span>").openPopup();
+                    } else {
+                        var distKm = (result.distance / 1000).toFixed(1);
+                        userMarker.bindPopup("<b>Vị trí bạn chọn</b><br><span class='text-danger fw-bold'>Ngoài vùng " + radiusKm + "km!</span><br>Đang dẫn tới chi nhánh gần nhất (" + distKm + "km)").openPopup();
+                    }
+                }
+            }
+        }
+
+        function findNearestStore(userLat, userLng, storeList) {
+            var minDistance = Infinity;
+            var nearestStore = null;
+            storeList.forEach(function(store) {
+                var dist = map.distance([userLat, userLng], [store.lat, store.lng]);
+                if (dist < minDistance) { minDistance = dist; nearestStore = store; }
+            });
+            return { store: nearestStore, distance: minDistance };
+        }
+
+        function getLocation() {
+            var statusEl = document.getElementById("status");
+            statusEl.style.display = "block";
+            if (!navigator.geolocation) { statusEl.innerText = "Lỗi GPS"; return; }
+            
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var lat = pos.coords.latitude; var lng = pos.coords.longitude;
+                statusEl.innerText = "Đã thấy bạn!";
+                setTimeout(() => statusEl.style.display = "none", 2000);
+                
+                map.setView([lat, lng], 14);
+                handleUserSelection(lat, lng);
+            });
+        }
+
+        function calculateRoute(start, end) {
+            if (routingControl) map.removeControl(routingControl);
+            routingControl = L.Routing.control({
+                waypoints: [start, end],
+                routeWhileDragging: false,
+                addWaypoints: false,
+                createMarker: function() { return null; },
+                lineOptions: { styles: [{color: '#d63384', opacity: 0.8, weight: 6}] },
+                show: false
+            }).on('routesfound', function(e) {
+                var summary = e.routes[0].summary;
+                var km = (summary.totalDistance / 1000).toFixed(1);
+                var fee = Math.round(km * 5000); 
+                document.getElementById("distance").innerText = km + " km";
+                document.getElementById("shipping-fee").innerText = fee.toLocaleString('vi-VN') + " ₫";
+            }).addTo(map);
+        }
+
+        // ===== TÍNH NĂNG TỰ ĐỘNG VẼ ĐƯỜNG SAU KHI ĐẶT HÀNG =====
+        // ===== TÍNH NĂNG TỰ ĐỘNG VẼ ĐƯỜNG SAU KHI ĐẶT HÀNG =====
+        var lastOrderAddress = "{{ last_order_address|default_if_none:'' }}";
+
+        if (lastOrderAddress !== "") {
+            var statusEl = document.getElementById("status");
+            statusEl.style.display = "block";
+            statusEl.innerText = "Đang tìm vị trí giao hàng...";
+
+            var geocodeUrl = "https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(lastOrderAddress);
+
+            fetch(geocodeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = parseFloat(data[0].lat);
+                        var lon = parseFloat(data[0].lon);
+
+                        statusEl.innerText = "Đã định vị được địa chỉ nhận hàng!";
+                        setTimeout(() => statusEl.style.display = "none", 3000);
+
+                        map.setView([lat, lon], 14);
+                        
+                        // ===== ĐÃ SỬA: THÊM TRUE VÀO ĐÚNG CHỖ NÀY =====
+                        handleUserSelection(lat, lon, true); 
+                        // ============================================
+
+                        setTimeout(() => {
+                            if (userMarker) {
+                                userMarker.bindPopup(
+                                    "<b class='text-primary'><i class='bi bi-box-seam'></i> Địa chỉ nhận hàng:</b><br>" + 
+                                    lastOrderAddress + 
+                                    "<br><small class='text-success fw-bold'>Đơn hàng đang được chuẩn bị!</small>"
+                                ).openPopup();
+                            }
+                        }, 500);
+
+                    } else {
+                        statusEl.innerText = "Không tìm thấy địa chỉ này trên bản đồ. Vui lòng nhập rõ hơn (VD: Quận 1, TP. HCM)";
+                        setTimeout(() => statusEl.style.display = "none", 5000);
+                    }
+                })
+                .catch(error => {
+                    statusEl.innerText = "Lỗi khi tìm tọa độ giao hàng.";
+                    setTimeout(() => statusEl.style.display = "none", 3000);
+                });
+        }
+        function searchAddress() {
+            var address = document.getElementById("address-input").value.trim();
+            if (address === "") {
+                alert("Vui lòng nhập địa chỉ cần tìm!");
+                return;
+            }
+
+            var statusEl = document.getElementById("status");
+            statusEl.style.display = "block";
+            statusEl.innerText = "Đang dò tìm địa chỉ trên bản đồ...";
+
+            var geocodeUrl = "https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(address + ", Việt Nam");
+
+            fetch(geocodeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = parseFloat(data[0].lat);
+                        var lon = parseFloat(data[0].lon);
+
+                        statusEl.innerText = "Đã tìm thấy địa chỉ!";
+                        setTimeout(() => statusEl.style.display = "none", 2000);
+
+                        map.setView([lat, lon], 14);
+                        handleUserSelection(lat, lon);
+
+                        setTimeout(() => {
+                            if (userMarker) {
+                                userMarker.bindPopup(
+                                    "<b class='text-primary'><i class='bi bi-geo-alt-fill'></i> Vị trí tìm kiếm:</b><br>" + address
+                                ).openPopup();
+                            }
+                        }, 500);
+
+                    } else {
+                        statusEl.innerText = "Không tìm thấy. Vui lòng nhập rõ hơn (VD: Tên đường, Phường, Quận, TP.HCM)";
+                        setTimeout(() => statusEl.style.display = "none", 4000);
+                    }
+                })
+                .catch(error => {
+                    statusEl.innerText = "Lỗi kết nối khi tìm kiếm.";
+                    setTimeout(() => statusEl.style.display = "none", 3000);
+                });
+        }
+
+        document.getElementById("address-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                searchAddress();
+            }
+        });
+    </script>
+
+    <div class="modal fade" id="cartModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-brand text-white border-0" style="background-color: #198754;">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-cart-check"></i> Giỏ Hàng Của Bạn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'checkout_cart' %}">
+                    {% csrf_token %}
+                    <div class="modal-body p-4">
+                        <ul id="cart-items" class="list-group mb-4 shadow-sm rounded-3"></ul>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="text-muted fw-bold">Tổng cộng:</span>
+                            <h4 class="text-danger fw-bolder mb-0"><span id="cart-total">0</span> ₫</h4>
+                        </div>
+                        
+                        <hr class="opacity-25 mb-4">
+                        <h6 class="fw-bold mb-3 text-success">Thông tin giao hàng</h6>
+                        
+                        <input type="hidden" name="cart_data" id="cart-data">
+                        
+                        <div class="form-floating mb-3">
+                            <input type="text" name="name" class="form-control rounded-3" id="cartName" placeholder="Tên" required>
+                            <label for="cartName">Họ và Tên</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" name="phone" class="form-control rounded-3" id="cartPhone" placeholder="SĐT" required>
+                            <label for="cartPhone">Số điện thoại</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <textarea name="address" class="form-control rounded-3" style="height: 90px" id="cartAddr" placeholder="Địa chỉ chi tiết" required></textarea>
+                            <label for="cartAddr">Địa chỉ nhận hàng</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 rounded-bottom-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="clearCart()">Xóa trắng</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow fw-bold">Tiến hành Đặt Hàng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('beauty_cart')) || [];
+
+        function updateCartUI() {
+            let countEl = document.getElementById('cart-count');
+            if(countEl) countEl.innerText = cart.length;
+            
+            let cartItemsList = document.getElementById('cart-items');
+            let total = 0;
+            
+            if (cart.length === 0) {
+                if(cartItemsList) cartItemsList.innerHTML = "<li class='list-group-item text-center text-muted py-4 border-0 bg-light'>Giỏ hàng của bạn đang trống!</li>";
+            } else {
+                if(cartItemsList) cartItemsList.innerHTML = "";
+                cart.forEach((item, index) => {
+                    total += item.price;
+                    if(cartItemsList) {
+                        cartItemsList.innerHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-bottom-0 mb-1 rounded-3 bg-light">
+                                <div>
+                                    <h6 class="mb-1 text-dark fw-bold" style="font-size: 0.9rem;">${item.name}</h6>
+                                    <small class="text-danger fw-bold">${item.price.toLocaleString('vi-VN')} ₫</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="removeFromCart(${index})" title="Xóa món này">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </li>
+                        `;
+                    }
+                });
+            }
+            
+            let totalEl = document.getElementById('cart-total');
+            if(totalEl) totalEl.innerText = total.toLocaleString('vi-VN');
+            
+            let dataEl = document.getElementById('cart-data');
+            if(dataEl) dataEl.value = JSON.stringify(cart);
+        }
+
+        function addToCart(id, name, price) {
+            cart.push({id: id, name: name, price: parseFloat(price)});
+            localStorage.setItem('beauty_cart', JSON.stringify(cart));
+            updateCartUI();
+            
+            let cartIcon = document.querySelector('.bi-cart3').parentNode;
+            cartIcon.style.transform = "scale(1.2)";
+            setTimeout(() => cartIcon.style.transform = "scale(1)", 200);
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('beauty_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function clearCart() {
+            cart = [];
+            localStorage.removeItem('beauty_cart');
+            updateCartUI();
+        }
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'thành công' in message.message|lower %}
+                    clearCart();
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        updateCartUI();
+    </script>
+    </body>
+</html>

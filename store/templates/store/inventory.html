@@ -1,0 +1,180 @@
+{% extends 'store/base.html' %} 
+{% block title %}Quản Lý Tồn Kho - Beauty GIS{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-info"><i class="bi bi-box-seam"></i> Phân Bổ Tồn Kho</h2>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill fw-bold"><i class="bi bi-arrow-left"></i> Trở về Dashboard</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-header bg-info text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-cart-plus"></i> Chọn Hàng Xuất Kho</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1">Chọn Sản phẩm</label>
+                        <select id="sel-product" class="form-select">
+                            {% for p in products %}
+                                <option value="{{ p.id }}" data-name="{{ p.name }}" data-stock="{{ p.stock }}">
+                                    {{ p.name }} (Tồn: {{ p.stock }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1">Số lượng xuất</label>
+                        <input type="number" id="sel-qty" class="form-control" value="1" min="1">
+                    </div>
+                    <button type="button" onclick="addToExportList()" class="btn btn-outline-info w-100 fw-bold rounded-pill shadow-sm">
+                        <i class="bi bi-plus-circle"></i> THÊM VÀO DANH SÁCH XUẤT
+                    </button>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-dark mb-3">Danh sách chuẩn bị xuất:</h6>
+                    <ul id="export-list" class="list-group mb-3 shadow-sm">
+                        <li class="list-group-item text-center text-muted small py-3 border-0 bg-light">Chưa chọn sản phẩm nào</li>
+                    </ul>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="transfer_data" id="transfer_data">
+                        
+                        <div class="mb-3 mt-4 border-top pt-3">
+                            <label class="fw-bold text-success mb-1"><i class="bi bi-geo-alt-fill"></i> Chi nhánh nhận hàng</label>
+                            <select name="branch_id" class="form-select border-success" required>
+                                {% for b in branches %}
+                                    <option value="{{ b.id }}">{{ b.name }} - {{ b.address }}</option>
+                                {% empty %}
+                                    <option disabled>Chưa có chi nhánh phụ nào!</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-info text-white w-100 fw-bold rounded-pill shadow-sm py-2">
+                            <i class="bi bi-truck"></i> XÁC NHẬN XUẤT KHO VÀ IN PHIẾU
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-dark">Lịch Sử Xuất Kho (Từng Món)</h5>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                    <table class="table table-hover align-middle text-center mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã PX</th>
+                                <th class="text-start">Sản phẩm</th>
+                                <th class="text-start">Xuất đến (Chi nhánh)</th>
+                                <th>Số lượng</th>
+                                <th>Ngày xuất</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transfers %}
+                            <tr>
+                                <td class="text-muted">#PX{{ t.id }}</td>
+                                <td class="text-start fw-bold text-info">{{ t.product.name }}</td>
+                                <td class="text-start">{{ t.branch.name }}</td>
+                                <td><span class="badge bg-danger rounded-pill px-3 fs-6">- {{ t.quantity }}</span></td>
+                                <td>{{ t.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'export_invoice' t.id %}" target="_blank" class="btn btn-sm btn-dark rounded-3">
+                                        <i class="bi bi-printer"></i> In Phiếu
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="py-5 text-muted">Chưa có lịch sử xuất kho nào.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let exportItems = [];
+
+    function updateExportUI() {
+        let listEl = document.getElementById('export-list');
+        if (exportItems.length === 0) {
+            listEl.innerHTML = '<li class="list-group-item text-center text-muted small py-3 border-0 bg-light">Chưa chọn sản phẩm nào</li>';
+        } else {
+            listEl.innerHTML = '';
+            exportItems.forEach((item, index) => {
+                listEl.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light border-bottom-0 mb-1 rounded">
+                        <div>
+                            <span class="fw-bold text-dark">${item.name}</span><br>
+                            <span class="badge bg-info text-dark">Số lượng: ${item.quantity}</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="removeItem(${index})"><i class="bi bi-x-lg"></i></button>
+                    </li>
+                `;
+            });
+        }
+        // Nạp dữ liệu vào form ẩn
+        document.getElementById('transfer_data').value = JSON.stringify(exportItems);
+    }
+
+    function addToExportList() {
+        let sel = document.getElementById('sel-product');
+        let qty = parseInt(document.getElementById('sel-qty').value);
+        let id = sel.value;
+        let name = sel.options[sel.selectedIndex].getAttribute('data-name');
+        let stock = parseInt(sel.options[sel.selectedIndex].getAttribute('data-stock'));
+
+        if (qty <= 0) {
+            alert("Số lượng phải lớn hơn 0");
+            return;
+        }
+        if (qty > stock) {
+            alert("Lỗi: Số lượng xuất (" + qty + ") vượt quá tồn kho (" + stock + ")!");
+            return;
+        }
+
+        // Nếu món này đã có trong danh sách thì cộng dồn số lượng
+        let existingItem = exportItems.find(i => i.product_id === id);
+        if (existingItem) {
+            if (existingItem.quantity + qty > stock) {
+                alert("Tổng số lượng trong danh sách vượt quá tồn kho!");
+                return;
+            }
+            existingItem.quantity += qty;
+        } else {
+            exportItems.push({ product_id: id, name: name, quantity: qty });
+        }
+        
+        updateExportUI();
+        document.getElementById('sel-qty').value = 1; // Reset ô nhập
+    }
+
+    function removeItem(index) {
+        exportItems.splice(index, 1);
+        updateExportUI();
+    }
+</script>
+{% endblock %}

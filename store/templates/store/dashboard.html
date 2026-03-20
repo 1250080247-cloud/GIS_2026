@@ -1,0 +1,276 @@
+{% extends 'store/base.html' %} 
+
+{% block title %}Bảng Điều Khiển Quản Trị{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-success"><i class="bi bi-speedometer2"></i> Dashboard Quản Trị</h2>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'add_branch' %}" class="btn btn-outline-success rounded-pill fw-bold shadow-sm">
+                <i class="bi bi-geo-alt-fill"></i> Thêm Chi Nhánh
+            </a>
+            <a href="{% url 'inventory' %}" class="btn btn-info text-white rounded-pill fw-bold shadow-sm">
+                <i class="bi bi-box-arrow-up-right"></i> Quản lý tồn kho
+            </a>
+            <a href="{% url 'add_product' %}" class="btn btn-danger rounded-pill fw-bold shadow-sm">
+                <i class="bi bi-plus-circle"></i> Thêm Sản Phẩm Mới
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-6">
+            <div class="card bg-success text-white border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase fw-bold opacity-75">Tổng Sản Phẩm</h6>
+                        <h2 class="display-5 fw-bold mb-0">{{ total_products }}</h2>
+                    </div>
+                    <i class="bi bi-box-seam display-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase fw-bold opacity-75">Đơn Hàng Đã Nhận</h6>
+                        <h2 class="display-5 fw-bold mb-0">{{ total_orders }}</h2>
+                    </div>
+                    <i class="bi bi-receipt display-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-warning text-dark border-bottom py-3 d-flex justify-content-between align-items-center" 
+             data-bs-toggle="collapse" data-bs-target="#collapseOrderList" style="cursor: pointer;" title="Nhấn để Ẩn/Hiện danh sách">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-receipt"></i> Danh Sách Đơn Hàng Mới Nhất</h5>
+            <i class="bi bi-chevron-expand fs-5 fw-bold"></i>
+        </div>
+        <div id="collapseOrderList" class="collapse">
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th class="text-start">Khách Hàng</th>
+                            <th>Số Điện Thoại</th>
+                            <th class="text-start">Sản Phẩm Mua</th>
+                            <th>Ngày Đặt</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grp in orders %}
+                        <tr>
+                            <td class="text-muted fw-bold">#{{ grp.main.id }}</td>
+                            <td class="text-start">
+                                <b class="text-dark">{{ grp.main.customer_name }}</b><br>
+                                <small class="text-muted d-inline-block text-truncate" style="max-width: 200px;" title="{{ grp.main.address }}">{{ grp.main.address }}</small>
+                            </td>
+                            <td>{{ grp.main.phone }}</td>
+                            
+                            <td class="text-start fw-bold text-success">
+                                {{ grp.main.product.name }}
+                                {% if grp.extra_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill shadow-sm ms-1" style="font-size: 0.75rem;">+{{ grp.extra_count }}</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>{{ grp.main.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <form action="{% url 'update_order_status' grp.main.id %}" method="POST" class="m-0">
+                                    {% csrf_token %}
+                                    <select name="status" class="form-select form-select-sm fw-bold border-0 shadow-sm mx-auto
+                                        {% if grp.main.status == 'Đã giao' %}bg-success text-white
+                                        {% elif grp.main.status == 'Đang giao' %}bg-info text-dark
+                                        {% else %}bg-warning text-dark{% endif %}"
+                                        onchange="this.form.submit()" 
+                                        style="border-radius: 20px; font-size: 0.85rem; cursor: pointer; width: 140px; text-align: center;">
+                                        
+                                        <option value="Đang xử lý" {% if grp.main.status == 'Đang xử lý' or not grp.main.status %}selected{% endif %}>⏳ Đang xử lý</option>
+                                        <option value="Đang giao" {% if grp.main.status == 'Đang giao' %}selected{% endif %}>🚚 Đang giao</option>
+                                        <option value="Đã giao" {% if grp.main.status == 'Đã giao' %}selected{% endif %}>✅ Đã giao</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td>
+                                <a href="{% url 'order_invoice' grp.main.id %}" target="_blank" class="btn btn-sm btn-dark rounded-3 shadow-sm" title="In Hóa Đơn">
+                                    <i class="bi bi-printer"></i> In Hóa Đơn
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                                Chưa có đơn hàng nào.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center"
+             data-bs-toggle="collapse" data-bs-target="#collapseProductList" style="cursor: pointer;" title="Nhấn để Ẩn/Hiện danh sách">
+            <h5 class="mb-0 fw-bold">Kho Hàng Hiện Tại (Sản Phẩm)</h5>
+            <i class="bi bi-chevron-expand fs-5 fw-bold text-muted"></i>
+        </div>
+        <div id="collapseProductList" class="collapse">
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Hình Ảnh</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Danh Mục</th> 
+                            <th>Giá Bán</th>
+                            <th>Tồn Kho</th> 
+                            <th>Flash Sale</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in products %}
+                        <tr>
+                            <td class="ps-4 text-muted">#{{ p.id }}</td>
+                            <td>
+                                {% if p.image %}
+                                    <img src="{{ p.image.url }}" alt="{{ p.name }}" class="rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <span class="badge bg-secondary">No IMG</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">{{ p.name }}</td>
+                            
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ p.category.name|default:"Chưa phân loại" }}
+                                </span>
+                            </td>
+                            
+                            <td class="text-danger fw-bold">{{ p.price }} ₫</td>
+                            
+                            <td>
+                                {% if p.stock > 10 %}
+                                    <span class="badge bg-success">{{ p.stock }}</span>
+                                {% elif p.stock > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ p.stock }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Hết hàng</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                {% if p.is_flash_sale %}
+                                    <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i> Có</span>
+                                {% else %}
+                                    <span class="text-muted small">Không</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="{% url 'edit_product' p.id %}" class="btn btn-outline-primary btn-sm rounded-3 shadow-sm" title="Sửa">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="{% url 'delete_product' p.id %}" onclick="return confirm('Xóa sản phẩm này?');" class="btn btn-outline-danger btn-sm rounded-3 shadow-sm" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                                Chưa có sản phẩm nào. Hãy bấm "Thêm Sản Phẩm Mới".
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center"
+             data-bs-toggle="collapse" data-bs-target="#collapseBranchList" style="cursor: pointer;" title="Nhấn để Ẩn/Hiện danh sách">
+            <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-geo-alt"></i> Hệ Thống Chi Nhánh Trên Bản Đồ</h5>
+            <i class="bi bi-chevron-expand fs-5 fw-bold text-primary"></i>
+        </div>
+        <div id="collapseBranchList" class="collapse">
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="table-primary">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Hình Ảnh</th>
+                            <th class="text-start">Tên Chi Nhánh</th>
+                            <th class="text-start">Địa Chỉ</th>
+                            <th>Loại Trạm</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in branches %}
+                        <tr>
+                            <td class="ps-4 text-muted">#{{ b.id }}</td>
+                            <td>
+                                {% if b.image %}
+                                    <img src="{{ b.image.url }}" alt="{{ b.name }}" class="rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <span class="badge bg-secondary">No IMG</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-start fw-bold">{{ b.name }}</td>
+                            
+                            <td class="text-start text-muted" style="max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ b.address }}">
+                                {{ b.address }}
+                            </td>
+                            
+                            <td>
+                                {% if b.store_type == 'MAIN' %}
+                                    <span class="badge bg-danger"><i class="bi bi-star-fill"></i> Trụ sở chính</span>
+                                {% else %}
+                                    <span class="badge bg-success">Chi nhánh</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="{% url 'edit_branch' b.id %}" class="btn btn-outline-primary btn-sm rounded-3 shadow-sm" title="Sửa">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="{% url 'delete_branch' b.id %}" onclick="return confirm('Bạn có chắc chắn muốn xóa chi nhánh này khỏi bản đồ?');" class="btn btn-outline-danger btn-sm rounded-3 shadow-sm" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-shop fs-1 d-block mb-2 opacity-50"></i>
+                                Chưa có chi nhánh nào. Hãy bấm "Thêm Chi Nhánh".
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 
+{% endblock %}

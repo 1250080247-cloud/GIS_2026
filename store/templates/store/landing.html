@@ -1,0 +1,356 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mỹ Phẩm Xanh - Trang Chủ</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="{% static 'store/css/landing.css' %}">
+    
+    <style>
+        .hover-zoom { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hover-zoom:hover { transform: scale(1.03); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; cursor: pointer; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <header class="bg-green-header py-3 sticky-top">
+        <div class="container d-flex align-items-center justify-content-between">
+            <a href="#" class="text-white text-decoration-none fs-4 fw-bold">
+                <i class="bi bi-flower1"></i> Beauty GIS Store
+            </a>
+
+            <div class="w-50 mx-3 d-none d-md-block">
+                <input type="text" class="form-control search-bar px-3" placeholder="Tìm sản phẩm, thương hiệu...">
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'map_page' %}" class="btn btn-light rounded-pill fw-bold text-success shadow-sm">
+                    <i class="bi bi-geo-alt-fill"></i> Hệ thống cửa hàng
+                </a>
+                
+                <div class="text-white d-none d-md-block position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#cartModal">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm" style="font-size: 0.65rem;">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mt-4">
+        <div class="bg-orange-flash p-3 rounded-top d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold fst-italic"><i class="bi bi-lightning-fill"></i> FLASH DEALS</h4>
+            <span class="badge bg-white text-dark fw-bold">02 : 45 : 30</span>
+        </div>
+        <div class="bg-white p-4 rounded-bottom shadow-sm">
+            <div class="row">
+                {% for p in flash_deals %}
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'product_detail' p.id %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 product-card shadow-sm hover-zoom">
+                            <div class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 small fw-bold rounded-start z-1">-15%</div>
+                            
+                            {% if p.image %}
+                                <img src="{{ p.image.url }}" class="card-img-top p-2" alt="{{ p.name }}" style="height: 200px; object-fit: contain;">
+                            {% else %}
+                                <img src="https://dummyimage.com/200x200/cccccc/000000.png&text=No+Image" class="card-img-top p-2" alt="No image">
+                            {% endif %}
+                            
+                            <div class="card-body text-center text-dark">
+                                <h6 class="card-title fw-bold text-truncate">{{ p.name }}</h6>
+                                <p class="text-danger fw-bold mb-1">{{ p.price }} ₫</p>
+                                
+                                {% if p.original_price %}
+                                    <del class="text-muted small">{{ p.original_price }} ₫</del>
+                                {% endif %}
+                                
+                                <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 80%"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">Đã bán 80</small>
+                            </div>
+                        </div>
+                    </a>
+                    </div>
+                {% empty %}
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-box-seam fs-1"></i>
+                    <p class="mt-2">Chưa có sản phẩm Flash Sale nào. Hãy vào Admin thêm nhé!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4 mb-5">
+        <div class="bg-white p-4 rounded shadow-sm">
+            <h5 class="fw-bold mb-4 text-uppercase">Khám phá Danh Mục</h5>
+            
+            <div class="d-flex justify-content-between text-center overflow-auto pb-2" id="category-filters">
+                <div class="px-3 product-card category-btn" data-filter="Chăm sóc da" style="cursor: pointer;">
+                    <div class="bg-light rounded-circle p-3 mb-2 mx-auto d-flex align-items-center justify-content-center filter-icon" style="width: 60px; height: 60px; transition: 0.3s;">
+                        <i class="bi bi-stars text-success fs-3"></i>
+                    </div>
+                    <small class="fw-bold text-muted">Chăm sóc da</small>
+                </div>
+                
+                <div class="px-3 product-card category-btn" data-filter="Trang điểm" style="cursor: pointer;">
+                    <div class="bg-light rounded-circle p-3 mb-2 mx-auto d-flex align-items-center justify-content-center filter-icon" style="width: 60px; height: 60px; transition: 0.3s;">
+                        <i class="bi bi-brush text-danger fs-3"></i>
+                    </div>
+                    <small class="fw-bold text-muted">Trang điểm</small>
+                </div>
+                
+                <div class="px-3 product-card category-btn" data-filter="Tóc & Body" style="cursor: pointer;">
+                    <div class="bg-light rounded-circle p-3 mb-2 mx-auto d-flex align-items-center justify-content-center filter-icon" style="width: 60px; height: 60px; transition: 0.3s;">
+                        <i class="bi bi-droplet text-primary fs-3"></i>
+                    </div>
+                    <small class="fw-bold text-muted">Tóc & Body</small>
+                </div>
+                
+                <div class="px-3 product-card category-btn" data-filter="Sức khỏe" style="cursor: pointer;">
+                    <div class="bg-light rounded-circle p-3 mb-2 mx-auto d-flex align-items-center justify-content-center filter-icon" style="width: 60px; height: 60px; transition: 0.3s;">
+                        <i class="bi bi-heart-pulse text-warning fs-3"></i>
+                    </div>
+                    <small class="fw-bold text-muted">Sức khỏe</small>
+                </div>
+                
+                <div class="px-3 product-card category-btn" data-filter="Nước hoa" style="cursor: pointer;">
+                    <div class="bg-light rounded-circle p-3 mb-2 mx-auto d-flex align-items-center justify-content-center filter-icon" style="width: 60px; height: 60px; transition: 0.3s;">
+                        <i class="bi bi-flower1 text-info fs-3"></i>
+                    </div>
+                    <small class="fw-bold text-muted">Nước hoa</small>
+                </div>
+                 
+                <div class="px-3 product-card category-btn" data-filter="all" style="cursor: pointer;">
+                    <div class="bg-light rounded-circle p-3 mb-2 mx-auto d-flex align-items-center justify-content-center filter-icon border border-2 border-dark" style="width: 60px; height: 60px; transition: 0.3s;">
+                        <i class="bi bi-grid text-dark fs-3"></i>
+                    </div>
+                    <small class="fw-bold text-dark">Xem tất cả</small>
+                </div>
+            </div>
+
+            <hr class="text-muted opacity-25 mt-4 mb-4">
+            <div class="row" id="product-list">
+                {% for p in all_products %}
+                <div class="col-md-3 mb-4 product-item" data-category="{{ p.category.name|default:'Chưa phân loại' }}">
+                    <a href="{% url 'product_detail' p.id %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 product-card shadow-sm hover-zoom">
+                            {% if p.image %}
+                                <img src="{{ p.image.url }}" class="card-img-top p-3" alt="{{ p.name }}" style="height: 180px; object-fit: contain;">
+                            {% else %}
+                                <img src="https://dummyimage.com/200x200/cccccc/000000.png&text=No+Image" class="card-img-top p-3" alt="No image">
+                            {% endif %}
+                            
+                            <div class="card-body text-center text-dark pt-0">
+                                <span class="badge bg-light text-secondary mb-2 border">{{ p.category.name }}</span>
+                                <h6 class="card-title fw-bold text-truncate" title="{{ p.name }}">{{ p.name }}</h6>
+                                <p class="text-success fw-bold fs-5 mb-0">{{ p.price }} ₫</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center text-muted">Chưa có sản phẩm nào.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const categoryBtns = document.querySelectorAll(".category-btn");
+            const productItems = document.querySelectorAll(".product-item");
+
+            categoryBtns.forEach(btn => {
+                btn.addEventListener("click", function() {
+                    // Xóa viền đậm của tất cả icon
+                    categoryBtns.forEach(b => {
+                        b.querySelector('.filter-icon').classList.remove('border', 'border-2', 'border-dark');
+                        b.querySelector('small').classList.remove('text-dark');
+                        b.querySelector('small').classList.add('text-muted');
+                    });
+
+                    // Thêm viền đậm cho icon vừa click
+                    this.querySelector('.filter-icon').classList.add('border', 'border-2', 'border-dark');
+                    this.querySelector('small').classList.remove('text-muted');
+                    this.querySelector('small').classList.add('text-dark');
+
+                    // Lấy giá trị data-filter (VD: "Chăm sóc da")
+                    const filterValue = this.getAttribute("data-filter");
+
+                    // Chạy vòng lặp ẩn/hiện sản phẩm
+                    productItems.forEach(item => {
+                        if (filterValue === "all" || item.getAttribute("data-category") === filterValue) {
+                            item.style.display = "block"; // Hiện
+                            item.style.animation = "fadeIn 0.5s"; // Hiệu ứng mờ dần
+                        } else {
+                            item.style.display = "none";  // Ẩn
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <footer class="bg-white border-top py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">© 2024 Green Shop - Hệ thống mỹ phẩm chính hãng.</p>
+        </div>
+    </footer>
+
+    {% if user.is_authenticated %}
+        {% if user.is_staff or user.is_superuser %}
+            <div style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; gap: 10px;">
+                <a href="{% url 'dashboard' %}" class="btn btn-dark shadow-lg rounded-pill px-4 py-2 fw-bold">
+                    <i class="bi bi-gear-fill"></i> Quản Trị Viên
+                </a>
+                <form method="POST" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger shadow-lg rounded-pill px-4 py-2 fw-bold">Đăng xuất</button>
+                </form>
+            </div>
+        {% else %}
+            <div style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; gap: 10px; align-items: center;">
+                <span class="badge bg-success shadow-lg px-3 py-2 fs-6 rounded-pill">
+                    <i class="bi bi-person-fill"></i> Xin chào, {{ user.username }}
+                </span>
+                <form method="POST" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger shadow-lg rounded-pill px-3 py-2 fw-bold">Đăng xuất</button>
+                </form>
+            </div>
+        {% endif %}
+    {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary shadow-lg rounded-pill px-4 py-2 fw-bold" 
+           style="position: fixed; bottom: 30px; right: 30px; z-index: 9999;">
+            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+        </a>
+    {% endif %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <div class="modal fade" id="cartModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-brand text-white border-0" style="background-color: #198754;">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-cart-check"></i> Giỏ Hàng Của Bạn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'checkout_cart' %}">
+                    {% csrf_token %}
+                    <div class="modal-body p-4">
+                        <ul id="cart-items" class="list-group mb-4 shadow-sm rounded-3"></ul>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="text-muted fw-bold">Tổng cộng:</span>
+                            <h4 class="text-danger fw-bolder mb-0"><span id="cart-total">0</span> ₫</h4>
+                        </div>
+                        
+                        <hr class="opacity-25 mb-4">
+                        <h6 class="fw-bold mb-3 text-success">Thông tin giao hàng</h6>
+                        
+                        <input type="hidden" name="cart_data" id="cart-data">
+                        
+                        <div class="form-floating mb-3">
+                            <input type="text" name="name" class="form-control rounded-3" id="cartName" placeholder="Tên" required>
+                            <label for="cartName">Họ và Tên</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" name="phone" class="form-control rounded-3" id="cartPhone" placeholder="SĐT" required>
+                            <label for="cartPhone">Số điện thoại</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <textarea name="address" class="form-control rounded-3" style="height: 90px" id="cartAddr" placeholder="Địa chỉ chi tiết" required></textarea>
+                            <label for="cartAddr">Địa chỉ nhận hàng</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 rounded-bottom-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="clearCart()">Xóa trắng</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow fw-bold">Tiến hành Đặt Hàng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('beauty_cart')) || [];
+
+        function updateCartUI() {
+            let countEl = document.getElementById('cart-count');
+            if(countEl) countEl.innerText = cart.length;
+            
+            let cartItemsList = document.getElementById('cart-items');
+            let total = 0;
+            
+            if (cart.length === 0) {
+                if(cartItemsList) cartItemsList.innerHTML = "<li class='list-group-item text-center text-muted py-4 border-0 bg-light'>Giỏ hàng của bạn đang trống!</li>";
+            } else {
+                if(cartItemsList) cartItemsList.innerHTML = "";
+                cart.forEach((item, index) => {
+                    total += item.price;
+                    if(cartItemsList) {
+                        cartItemsList.innerHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-bottom-0 mb-1 rounded-3 bg-light">
+                                <div>
+                                    <h6 class="mb-1 text-dark fw-bold" style="font-size: 0.9rem;">${item.name}</h6>
+                                    <small class="text-danger fw-bold">${item.price.toLocaleString('vi-VN')} ₫</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="removeFromCart(${index})" title="Xóa món này">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </li>
+                        `;
+                    }
+                });
+            }
+            
+            let totalEl = document.getElementById('cart-total');
+            if(totalEl) totalEl.innerText = total.toLocaleString('vi-VN');
+            
+            let dataEl = document.getElementById('cart-data');
+            if(dataEl) dataEl.value = JSON.stringify(cart);
+        }
+
+        function addToCart(id, name, price) {
+            cart.push({id: id, name: name, price: parseFloat(price)});
+            localStorage.setItem('beauty_cart', JSON.stringify(cart));
+            updateCartUI();
+            
+            let cartIcon = document.querySelector('.bi-cart3').parentNode;
+            cartIcon.style.transform = "scale(1.2)";
+            setTimeout(() => cartIcon.style.transform = "scale(1)", 200);
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('beauty_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function clearCart() {
+            cart = [];
+            localStorage.removeItem('beauty_cart');
+            updateCartUI();
+        }
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'thành công' in message.message|lower %}
+                    clearCart();
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        updateCartUI();
+    </script>
+    </body>
+</html>

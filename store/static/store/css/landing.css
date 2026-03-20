@@ -1,0 +1,28 @@
+.bg-green-header {
+    background-color: #198754;
+}
+
+.bg-orange-flash {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.nav-link {
+    color: white !important;
+}
+
+.search-bar {
+    border-radius: 20px;
+    border: none;
+}
+
+.product-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.hover-zoom:hover { transform: scale(1.03); transition: 0.3s; }

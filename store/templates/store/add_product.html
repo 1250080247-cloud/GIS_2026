@@ -1,0 +1,79 @@
+{% extends 'store/base.html' %} 
+
+{% block title %}Thêm Sản Phẩm Mới{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-success text-white text-center py-3 rounded-top-4">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-cloud-arrow-up"></i> Tải Lên Sản Phẩm Mới</h5>
+                </div>
+                <div class="card-body p-4">
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger fw-bold">
+                            Vui lòng kiểm tra lại thông tin. Bạn đang nhập thiếu hoặc sai định dạng ở ô nào đó!
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %} <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tên sản phẩm *</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Danh mục *</label>
+                                {{ form.category }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Giá bán thực tế (VNĐ) *</label>
+                                {{ form.price }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Giá gốc (để gạch ngang)</label>
+                                {{ form.original_price }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tồn kho *</label>
+                                {{ form.stock }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Hình ảnh sản phẩm</label>
+                                {{ form.image }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3 border p-3 rounded bg-light">
+                            <div class="form-check form-switch">
+                                {{ form.is_flash_sale }}
+                                <label class="form-check-label fw-bold text-danger ms-2" for="{{ form.is_flash_sale.id_for_label }}">
+                                    🔥 Đưa vào danh sách Flash Sale
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Mô tả chi tiết</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">Quay Lại</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">LƯU VÀO KHO</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'store/base.html' %} 
+
+{% block title %}Thêm Chi Nhánh Mới{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    /* CSS cho khu vực bản đồ */
+    #branchMap {
+        height: 100%;
+        min-height: 500px;
+        width: 100%;
+        border-radius: 0 1rem 1rem 0; /* Bo tròn góc bên phải */
+    }
+    @media (max-width: 991px) {
+        #branchMap {
+            min-height: 350px;
+            border-radius: 0 0 1rem 1rem; /* Bo tròn ở dưới khi dùng điện thoại */
+        }
+    }
+</style>
+
+<div class="container-fluid px-4 mt-4 mb-5" style="max-width: 1400px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-success"><i class="bi bi-geo-alt-fill"></i> Thêm Chi Nhánh Lên Bản Đồ</h2>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm">
+            <i class="bi bi-arrow-left"></i> Trở về Dashboard
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="row g-0">
+            
+            <div class="col-lg-5 p-4 p-md-5 bg-white">
+                <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Thông tin chi nhánh</h5>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1 small text-muted">Tên Chi Nhánh</label>
+                        <input type="text" name="name" class="form-control rounded-3" placeholder="VD: Chi nhánh Quận 1..." required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1 small text-muted">Địa chỉ chi tiết</label>
+                        <input type="text" name="address" class="form-control rounded-3" placeholder="VD: 123 Lê Lợi, Phường Bến Thành..." required>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="fw-bold mb-1 small text-muted">Vĩ độ (Latitude)</label>
+                            <input type="text" name="latitude" id="lat-input" class="form-control rounded-3 border-success" placeholder="VD: 10.7769" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="fw-bold mb-1 small text-muted">Kinh độ (Longitude)</label>
+                            <input type="text" name="longitude" id="lon-input" class="form-control rounded-3 border-success" placeholder="VD: 106.7009" required>
+                        </div>
+                        <div class="col-12 mt-1">
+                            <small class="text-primary fw-bold"><i class="bi bi-info-circle"></i> Mẹo: Nhập số ở trên để bản đồ tự chạy, hoặc CLICK trực tiếp lên bản đồ bên phải để lấy tọa độ tự động.</small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label class="fw-bold mb-1 small text-muted">Loại cửa hàng</label>
+                            <select name="store_type" class="form-select rounded-3">
+                                <option value="SUB">Chi nhánh nhỏ (Ghim Xanh)</option>
+                                <option value="MAIN">Trụ sở chính (Ghim Đỏ)</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="fw-bold mb-1 small text-muted">Hình ảnh mặt tiền</label>
+                            <input type="file" name="image" class="form-control rounded-3">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill shadow py-2 fs-5 mt-2">
+                        <i class="bi bi-plus-circle"></i> THÊM VÀO HỆ THỐNG
+                    </button>
+                </form>
+            </div>
+
+            <div class="col-lg-7 bg-light position-relative">
+                <div id="branchMap"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Khởi tạo bản đồ, mặc định để ở trung tâm TP.HCM
+        var map = L.map('branchMap').setView([10.7769, 106.7009], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap - Beauty GIS'
+        }).addTo(map);
+
+        var previewMarker = null;
+
+        // Lấy 2 ô input
+        var latInput = document.getElementById('lat-input');
+        var lonInput = document.getElementById('lon-input');
+
+        // 2. Hàm cập nhật bản đồ dựa trên số đang nhập
+        function updateMapFromInputs() {
+            var lat = parseFloat(latInput.value);
+            var lon = parseFloat(lonInput.value);
+
+            // Chỉ cập nhật khi cả 2 ô đều là số hợp lệ
+            if (!isNaN(lat) && !isNaN(lon)) {
+                map.setView([lat, lon], 16); // Bay tới vị trí đó và zoom sát vào
+                
+                if (previewMarker) {
+                    previewMarker.setLatLng([lat, lon]);
+                } else {
+                    previewMarker = L.marker([lat, lon]).addTo(map)
+                        .bindPopup("<b>Vị trí chi nhánh mới</b>").openPopup();
+                }
+            }
+        }
+
+        // 3. Lắng nghe sự kiện 'input' (Gõ phím nào là bắt phím đó, không cần Enter)
+        latInput.addEventListener('input', updateMapFromInputs);
+        lonInput.addEventListener('input', updateMapFromInputs);
+
+        // 4. BONUS: Cắm ghim trực tiếp trên bản đồ để lấy số Lat/Lon tự động
+        map.on('click', function(e) {
+            var clickedLat = e.latlng.lat.toFixed(6); // Lấy 6 số thập phân
+            var clickedLon = e.latlng.lng.toFixed(6);
+            
+            // Điền ngược lại vào form
+            latInput.value = clickedLat;
+            lonInput.value = clickedLon;
+            
+            // Gọi hàm để vẽ ghim mới
+            updateMapFromInputs();
+        });
+    });
+</script>
+{% endblock %}

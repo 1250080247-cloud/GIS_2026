@@ -1,0 +1,64 @@
+{% extends 'store/base.html' %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white py-3 rounded-top-4 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-pencil-square"></i> Cập Nhật Chi Nhánh</h5>
+                    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light rounded-pill fw-bold text-primary"><i class="bi bi-arrow-left"></i> Trở về</a>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Tên Chi Nhánh</label>
+                            <input type="text" name="name" class="form-control" value="{{ branch.name }}" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Địa chỉ chi tiết</label>
+                            <input type="text" name="address" class="form-control" value="{{ branch.address }}" required>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Vĩ độ (Latitude)</label>
+                                <input type="number" step="any" name="latitude" class="form-control" value="{{ branch.latitude|stringformat:'f' }}" required>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label fw-bold">Kinh độ (Longitude)</label>
+                                <input type="number" step="any" name="longitude" class="form-control" value="{{ branch.longitude|stringformat:'f' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Loại cửa hàng</label>
+                                <select name="store_type" class="form-select" required>
+                                    <option value="SUB" {% if branch.store_type == 'SUB' %}selected{% endif %}>Chi nhánh nhỏ (Ghim Xanh)</option>
+                                    <option value="MAIN" {% if branch.store_type == 'MAIN' %}selected{% endif %}>Trụ sở chính (Ghim Đỏ)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label fw-bold">Hình ảnh mặt tiền mới (Bỏ trống nếu giữ ảnh cũ)</label>
+                                <input type="file" name="image" class="form-control" accept="image/*">
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
+                                <i class="bi bi-save"></i> LƯU THAY ĐỔI
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

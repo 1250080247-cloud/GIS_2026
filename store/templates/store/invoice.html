@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hóa Đơn #{{ main_order.id }} - Beauty GIS Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .invoice-card { max-width: 800px; margin: 40px auto; background: #fff; padding: 40px; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        .invoice-header { border-bottom: 2px solid #198754; padding-bottom: 20px; margin-bottom: 20px; }
+        @media print {
+            body { background-color: #fff; margin: 0; padding: 0; }
+            .invoice-card { box-shadow: none; border: none !important; margin: 0; padding: 20px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="invoice-card rounded-4 border">
+        
+        <div class="d-flex justify-content-end mb-4 no-print gap-2">
+            <button onclick="window.close()" class="btn btn-outline-secondary rounded-pill fw-bold"><i class="bi bi-x-circle"></i> Đóng</button>
+            <button onclick="window.print()" class="btn btn-success rounded-pill shadow-sm fw-bold"><i class="bi bi-printer-fill"></i> In Hóa Đơn ngay</button>
+        </div>
+
+        <div class="invoice-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bolder text-success mb-0"><i class="bi bi-stars"></i> BEAUTY GIS STORE</h2>
+                <p class="text-muted mb-0 mt-1">Hệ thống phân phối mỹ phẩm thông minh</p>
+                <small class="text-muted">Website: www.beautygis.vn | Hotline: 1900 xxxx</small>
+            </div>
+            <div class="text-end">
+                <h3 class="fw-bold text-dark">HÓA ĐƠN BÁN LẺ</h3>
+                <p class="mb-0">Mã đơn: <b class="text-danger">#{{ main_order.id }}</b></p>
+                <p class="text-muted small">Ngày lập: {{ main_order.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-sm-8">
+                <h6 class="text-muted text-uppercase fw-bold mb-3">Thông tin nhận hàng:</h6>
+                <h5 class="fw-bold mb-1 text-dark">{{ main_order.customer_name }}</h5>
+                <p class="mb-1"><i class="bi bi-telephone-fill text-success me-2"></i> {{ main_order.phone }}</p>
+                <p class="mb-0"><i class="bi bi-geo-alt-fill text-success me-2"></i> {{ main_order.address }}</p>
+            </div>
+            <div class="col-sm-4 text-end">
+                <h6 class="text-muted text-uppercase fw-bold mb-3">Trạng thái đơn:</h6>
+                <span class="badge border border-success text-success px-3 py-2 fs-6 rounded-pill">
+                    {{ main_order.status|default:"Đang xử lý" }}
+                </span>
+            </div>
+        </div>
+
+        <table class="table table-bordered mb-4 text-center align-middle">
+            <thead class="table-success text-success">
+                <tr>
+                    <th>STT</th>
+                    <th class="text-start">Tên Sản Phẩm</th>
+                    <th>Đơn Giá</th>
+                    <th>SL</th>
+                    <th>Thành Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sibling_orders %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="text-start fw-bold">{{ item.product.name }}</td>
+                    <td>{{ item.product.price }} ₫</td>
+                    <td>1</td>
+                    <td class="fw-bold">{{ item.product.price }} ₫</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="row justify-content-end">
+            <div class="col-sm-6 col-md-5">
+                <table class="table table-sm borderless">
+                    <tr>
+                        <td class="text-end text-muted">Tạm tính:</td>
+                        <td class="text-end fw-bold">{{ total_price }} ₫</td>
+                    </tr>
+                    <tr>
+                        <td class="text-end text-muted">Phí vận chuyển:</td>
+                        <td class="text-end fw-bold text-primary">Thanh toán với Shipper</td>
+                    </tr>
+                    <tr class="border-top border-dark">
+                        <td class="text-end fw-bolder fs-5 text-dark pt-2">TỔNG CỘNG:</td>
+                        <td class="text-end fw-bolder fs-5 text-danger pt-2">{{ total_price }} ₫</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 pt-4 border-top">
+            <p class="fw-bold text-success mb-1">Cảm ơn quý khách đã tin tưởng và mua sắm tại Beauty GIS!</p>
+            <i class="text-muted small">Hóa đơn này có giá trị lưu hành nội bộ và bảo hành sản phẩm.</i>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
