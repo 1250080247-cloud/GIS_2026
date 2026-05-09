@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Kết quả tìm kiếm: {{ search_query }} - Beauty GIS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .hover-zoom { transition: transform 0.3s ease; }
+        .hover-zoom:hover { transform: scale(1.03); cursor: pointer; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <header class="sticky-top shadow-sm w-100" style="z-index: 1040;">
+        <div class="bg-white py-2">
+            <div class="container d-flex align-items-center justify-content-between">
+                <a href="{% url 'landing' %}" class="text-decoration-none fs-3 fw-bolder d-flex align-items-center" style="color: #198754;">
+                    <i class="bi bi-flower1 me-2"></i> Beauty GIS Store
+                </a>
+                <div class="w-50 mx-3 d-none d-lg-block">
+                    <form action="{% url 'search' %}" method="GET" class="input-group border rounded-pill overflow-hidden">
+                        <input type="text" name="q" class="form-control border-0 shadow-none px-4" placeholder="Tìm sản phẩm, thương hiệu..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-success px-4"><i class="bi bi-search"></i></button>
+                    </form>
+                </div>
+                <div>
+                    <a href="{% url 'landing' %}" class="btn btn-outline-success btn-sm rounded-pill fw-bold">Về Trang chủ</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mt-4 mb-5 flex-grow-1">
+        <h4 class="mb-4 text-dark"><i class="bi bi-search"></i> Kết quả tìm kiếm cho từ khóa: <strong class="text-danger">"{{ search_query }}"</strong></h4>
+        
+        <div class="row g-3">
+            {% for p in products %}
+            <div class="col-md-3 col-6">
+                <a href="{% url 'product_detail' p.id %}" class="text-decoration-none">
+                    <div class="card h-100 border border-light shadow-sm rounded-3 hover-zoom bg-white p-2">
+                        {% if p.image and p.image.name %}
+                            <img src="{{ p.image.url }}" class="card-img-top p-2" style="height: 180px; object-fit: contain;">
+                        {% elif p.image_url %}
+                            <img src="{{ p.image_url }}" class="card-img-top p-2" style="height: 180px; object-fit: contain;">
+                        {% else %}
+                            <img src="https://dummyimage.com/200x200/cccccc/000000.png&text=No+Image" class="card-img-top p-2">
+                        {% endif %}
+                        
+                        <div class="card-body text-center p-2 pt-3">
+                            <span class="badge bg-light text-secondary border mb-2">{{ p.category.name }}</span>
+                            <h6 class="card-title fw-bold text-dark text-truncate small mb-1">{{ p.name }}</h6>
+                            <p class="text-danger fw-bolder fs-5 mb-2">{{ p.price }} ₫</p>
+                            <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold"><i class="bi bi-cart-plus"></i> Xem chi tiết</button>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <img src="https://salt.tikicdn.com/desktop/img/mascot_fail.svg" width="150" class="mb-3">
+                <h5 class="text-muted">Rất tiếc, không tìm thấy sản phẩm nào phù hợp!</h5>
+                <p>Hãy thử lại bằng những từ khóa chung chung hơn (VD: Son, Nước hoa, Dior...)</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

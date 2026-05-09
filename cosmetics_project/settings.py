@@ -126,3 +126,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Điều hướng sau khi Đăng nhập và Đăng xuất
 LOGIN_REDIRECT_URL = 'landing'
 LOGOUT_REDIRECT_URL = 'landing'
+
+
+# Cấu hình gửi mail thông qua Mailtrap
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = 'e4effb6b5746c1'
+EMAIL_HOST_PASSWORD = '9bc2717cc6cd1b'
+EMAIL_PORT = '2525'
+
+LOGIN_URL = 'login'

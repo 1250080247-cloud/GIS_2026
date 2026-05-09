@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản của tôi - Beauty GIS Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Nunito', sans-serif; }
+        
+        /* HEADER & NAVBAR */
+        .brand-text { color: #ee4d2d; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; }
+        .btn-brand-outline { color: #ee4d2d; border: 2px solid #ee4d2d; font-weight: 700; transition: all 0.3s; }
+        .btn-brand-outline:hover { background-color: #ee4d2d; color: #fff; }
+
+        /* KẾT CẤU CARD CHUNG */
+        .card-custom { background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: none; }
+        
+        /* SIDEBAR MENU */
+        .sidebar-menu .nav-link { color: #495057; font-weight: 600; padding: 12px 20px; border-radius: 12px; transition: all 0.3s ease; margin-bottom: 8px; display: flex; align-items: center; }
+        .sidebar-menu .nav-link i { font-size: 1.2rem; margin-right: 12px; transition: transform 0.3s; }
+        .sidebar-menu .nav-link:hover { background-color: #fff0f0; color: #ee4d2d; transform: translateX(5px); }
+        .sidebar-menu .nav-link.active { background-color: #fff0f0; color: #ee4d2d; font-weight: 800; border-left: 4px solid #ee4d2d; box-shadow: 0 4px 10px rgba(238, 77, 45, 0.1); }
+        .sidebar-menu .nav-link.active i { transform: scale(1.2); }
+
+        /* FORM TÀI KHOẢN */
+        .form-control-custom { border-radius: 10px; padding: 12px 15px; border: 1px solid #dee2e6; background-color: #f8f9fa; transition: all 0.3s; }
+        .form-control-custom:focus { background-color: #fff; border-color: #ee4d2d; box-shadow: 0 0 0 4px rgba(238, 77, 45, 0.1); }
+        .btn-brand { background-color: #ee4d2d; color: white; padding: 12px 30px; font-weight: 700; border-radius: 10px; border: none; transition: all 0.3s; }
+        .btn-brand:hover { background-color: #d73d1e; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(238, 77, 45, 0.3); }
+
+        /* AVATAR GÓC PHẢI */
+        .avatar-wrapper { position: relative; display: inline-block; cursor: pointer; transition: transform 0.3s; }
+        .avatar-wrapper:hover { transform: scale(1.05); }
+        .avatar-wrapper::after { content: '\F28B'; font-family: 'bootstrap-icons'; position: absolute; bottom: 5px; right: 5px; background: #ee4d2d; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        /* CARD ĐƠN HÀNG */
+        .order-card { border: 1px solid #f1f3f5; border-radius: 16px; overflow: hidden; transition: all 0.3s ease; background: #fff; margin-bottom: 24px; position: relative; }
+        .order-card:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.06); border-color: #ffeaea; transform: translateY(-3px); }
+        .order-header { background-color: #fafbfc; border-bottom: 1px dashed #e9ecef; padding: 16px 24px; }
+        .status-badge { font-size: 0.8rem; font-weight: 800; padding: 6px 12px; border-radius: 8px; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white shadow-sm py-3 mb-4 sticky-top">
+        <div class="container d-flex align-items-center justify-content-between">
+            <a href="{% url 'landing' %}" class="text-decoration-none d-flex align-items-center">
+                <i class="bi bi-flower1 fs-2 me-2 text-success"></i>
+                <span class="brand-text">Beauty GIS Store</span>
+                <span class="ms-2 ps-2 border-start border-2 text-muted fw-bold d-none d-md-block" style="font-size: 1.1rem; margin-top: 4px;">Trang Cá Nhân</span>
+            </a>
+            <a href="{% url 'landing' %}" class="btn btn-brand-outline rounded-pill px-4">Tiếp tục mua sắm</a>
+        </div>
+    </header>
+
+    <div class="container mb-5">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show shadow-sm border-0 rounded-4 d-flex align-items-center">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-octagon-fill text-danger{% else %}bi-check-circle-fill text-success{% endif %} fs-4 me-3"></i> 
+                <span class="fw-bold">{{ message }}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-4">
+                <div class="card-custom p-4 mb-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-wrapper me-3" onclick="document.getElementById('v-pills-profile-tab').click()">
+                            <img id="sidebarAvatar" src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}https://dummyimage.com/100x100/eeeeee/ee4d2d.png&text={{ request.user.username|make_list|first|upper }}{% endif %}" class="rounded-circle border border-3 border-white shadow-sm" width="56" height="56" style="object-fit: cover;">
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-5 lh-1">{{ request.user.username }}</div>
+                            <a href="#" class="text-muted small text-decoration-none fw-semibold" onclick="document.getElementById('v-pills-profile-tab').click()"><i class="bi bi-pencil-square text-warning"></i> Sửa hồ sơ</a>
+                        </div>
+                    </div>
+                    <hr class="text-muted opacity-10 mb-4">
+                    
+                    <div class="nav flex-column nav-pills sidebar-menu" id="v-pills-tab" role="tablist">
+                        <button class="nav-link text-start active" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab">
+                            <i class="bi bi-person-badge"></i> Tài khoản của tôi
+                        </button>
+                        <button class="nav-link text-start" id="v-pills-orders-tab" data-bs-toggle="pill" data-bs-target="#v-pills-orders" type="button" role="tab">
+                            <i class="bi bi-bag-check"></i> Đơn mua của tôi
+                        </button>
+                        <form method="POST" action="{% url 'logout' %}" class="mt-4">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-light w-100 text-start text-danger fw-bold rounded-3 py-2"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất tài khoản</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9 col-md-8">
+                <div class="tab-content" id="v-pills-tabContent">
+                    
+                    <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel">
+                        <div class="card-custom p-5">
+                            <div class="border-bottom pb-3 mb-4">
+                                <h4 class="fw-bolder text-dark mb-1">Hồ Sơ Của Tôi</h4>
+                                <p class="text-muted mb-0">Quản lý thông tin hồ sơ để bảo mật tài khoản và theo dõi đơn hàng dễ dàng hơn.</p>
+                            </div>
+                            
+                            <div class="row align-items-center">
+                                <div class="col-lg-8 order-2 order-lg-1">
+                                    <form method="POST" action="{% url 'customer_profile' %}" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-sm-3 text-sm-end text-muted fw-bold">Tên Đăng Nhập</div>
+                                            <div class="col-sm-9">
+                                                <div class="bg-light px-3 py-2 rounded-3 border fw-bold text-secondary">{{ request.user.username }}</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-sm-3 text-sm-end text-muted fw-bold">Địa chỉ Email</div>
+                                            <div class="col-sm-9">
+                                                <input type="email" name="email" class="form-control form-control-custom" value="{{ request.user.email|default:'' }}" placeholder="Ví dụ: nguyenvan@gmail.com">
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-sm-3 text-sm-end text-muted fw-bold">Mật khẩu</div>
+                                            <div class="col-sm-9 d-flex align-items-center">
+                                                <div class="bg-light px-3 py-2 rounded-3 border fw-bold text-secondary flex-grow-1" style="letter-spacing: 2px;">********</div>
+                                                <button type="button" class="btn btn-sm btn-outline-danger ms-2 fw-bold text-nowrap shadow-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                                    Thay đổi
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-sm-3 text-sm-end text-muted fw-bold">Số điện thoại <span class="text-danger">*</span></div>
+                                            <div class="col-sm-9">
+                                                <input type="text" name="phone" class="form-control form-control-custom fw-bold text-success" value="{{ profile.phone|default:'' }}" required>
+                                                <div class="form-text mt-2"><i class="bi bi-info-circle text-primary"></i> Dùng số điện thoại để tra cứu đơn hàng.</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-5">
+                                            <div class="col-sm-3 text-sm-end text-muted fw-bold pt-2">Địa chỉ giao hàng</div>
+                                            <div class="col-sm-9">
+                                                <textarea name="address" class="form-control form-control-custom" rows="2" placeholder="Nhập địa chỉ mặc định...">{{ profile.address|default:'' }}</textarea>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-sm-3"></div>
+                                            <div class="col-sm-9">
+                                                <button type="submit" class="btn btn-brand shadow-sm"><i class="bi bi-floppy2-fill me-2"></i> Lưu Thay Đổi</button>
+                                            </div>
+                                        </div>
+                                </div>
+                                
+                                <div class="col-lg-4 order-1 order-lg-2 text-center mb-5 mb-lg-0">
+                                    <div class="avatar-wrapper mb-3" onclick="document.getElementById('avatarInput').click()">
+                                        <img id="avatarPreview" src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}https://dummyimage.com/200x200/eeeeee/ee4d2d.png&text={{ request.user.username|make_list|first|upper }}{% endif %}" class="rounded-circle border border-4 border-white shadow" width="120" height="120" style="object-fit: cover;">
+                                    </div>
+                                    <div class="text-center">
+                                        <input type="file" name="avatar" id="avatarInput" style="display: none;" accept="image/jpeg, image/png" onchange="previewImage(this)">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-3 mb-2" onclick="document.getElementById('avatarInput').click()">Chọn Ảnh Mới</button>
+                                        <p class="small text-muted mb-0">Định dạng: .JPEG, .PNG</p>
+                                    </div>
+                                </div>
+                                </form> 
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="v-pills-orders" role="tabpanel">
+                        <div class="card-custom p-4 mb-4 d-flex justify-content-between align-items-center">
+                            <h4 class="fw-bolder text-dark mb-0"><i class="bi bi-box-seam text-success me-2"></i> Lịch Sử Mua Hàng</h4>
+                        </div>
+                        
+                        {% for group in my_orders %}
+                            <div class="order-card">
+                                {% if group.main.status == 'Đã giao' %}
+                                <div class="position-absolute top-0 end-0 bg-success text-white px-3 py-1 fw-bold" style="border-radius: 0 16px 0 16px; font-size: 0.8rem; z-index: 2;">Thành công</div>
+                                {% endif %}
+
+                                <div class="order-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bolder text-dark me-3 fs-5">Mã ĐH: #{{ group.main.id|stringformat:"04d" }}</span>
+                                        <span class="badge bg-light text-secondary border"><i class="bi bi-calendar-event"></i> {{ group.main.created_at|date:"d/m/Y H:i" }}</span>
+                                    </div>
+                                    <div>
+                                        {% if group.main.status == 'Đang xử lý' %}
+                                            <span class="status-badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> ĐANG XỬ LÝ</span>
+                                        {% elif group.main.status == 'Đang giao' %}
+                                            <span class="status-badge bg-primary text-white"><i class="bi bi-truck"></i> ĐANG GIAO HÀNG</span>
+                                        {% elif group.main.status == 'Đã giao' %}
+                                            <span class="status-badge text-success"><i class="bi bi-check-circle-fill"></i> ĐÃ GIAO</span>
+                                        {% else %}
+                                            <span class="status-badge bg-danger text-white"><i class="bi bi-x-circle"></i> ĐÃ HỦY</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-white d-flex align-items-center">
+                                    <div class="position-relative me-4">
+                                        <img src="{% if group.main.product.image %}{{ group.main.product.image.url }}{% elif group.main.product.image_url %}{{ group.main.product.image_url }}{% else %}https://dummyimage.com/100x100/f8f9fa/dee2e6.png&text=No+Image{% endif %}" width="90" height="90" class="border rounded-3 p-1 shadow-sm" style="object-fit: contain;">
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary border border-white">x1</span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="fw-bold text-dark mb-1">{{ group.main.product.name }}</h5>
+                                        <p class="text-dark small mb-0"><i class="bi bi-geo-alt-fill text-danger"></i> {{ group.main.address }}</p>
+                                        {% if group.extra_count > 0 %}
+                                        <div class="mt-2 p-2 bg-light rounded-3 text-secondary small fw-bold d-inline-block">
+                                            <i class="bi bi-boxes"></i> Và {{ group.extra_count }} sản phẩm khác trong cùng đơn
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-dark me-2 d-block small">Thành tiền:</span>
+                                        <span class="fs-4 fw-bolder" style="color: #ee4d2d;">{{ group.main.total_amount|default:group.main.product.price }} ₫</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center p-5 bg-white rounded-4">
+                                <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/5fafbb923393b712b96488590b8f781f.png" width="100" class="opacity-50 mb-3">
+                                <h5 class="text-muted fw-bold">Chưa có đơn hàng nào.</h5>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header text-white border-0 rounded-top-4" style="background-color: #ee4d2d;">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill"></i> Đổi Mật Khẩu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form action="{% url 'change_password' %}" method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm">
+                                <input type="password" name="old_password" class="form-control form-control-custom border-end-0" style="border-radius: 10px 0 0 10px;" required>
+                                <span class="input-group-text bg-white border-start-0 toggle-password" style="cursor: pointer; border-radius: 0 10px 10px 0;">
+                                    <i class="bi bi-eye-slash text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Mật khẩu mới <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm">
+                                <input type="password" name="new_password" class="form-control form-control-custom border-end-0" style="border-radius: 10px 0 0 10px;" required>
+                                <span class="input-group-text bg-white border-start-0 toggle-password" style="cursor: pointer; border-radius: 0 10px 10px 0;">
+                                    <i class="bi bi-eye-slash text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm">
+                                <input type="password" name="confirm_password" class="form-control form-control-custom border-end-0" style="border-radius: 10px 0 0 10px;" required>
+                                <span class="input-group-text bg-white border-start-0 toggle-password" style="cursor: pointer; border-radius: 0 10px 10px 0;">
+                                    <i class="bi bi-eye-slash text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-brand w-100 rounded-pill shadow-sm">Xác Nhận Đổi Mật Khẩu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JS Preview Ảnh
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                    document.getElementById('sidebarAvatar').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // JS Bật/tắt con mắt mật khẩu
+        document.addEventListener("DOMContentLoaded", function() {
+            const togglePasswords = document.querySelectorAll('.toggle-password');
+            
+            togglePasswords.forEach(function(toggle) {
+                toggle.addEventListener('click', function() {
+                    const input = this.previousElementSibling;
+                    const icon = this.querySelector('i');
+
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('bi-eye-slash', 'text-muted');
+                        icon.classList.add('bi-eye', 'text-success'); 
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('bi-eye', 'text-success');
+                        icon.classList.add('bi-eye-slash', 'text-muted'); 
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

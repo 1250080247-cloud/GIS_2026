@@ -1,79 +1,126 @@
 {% extends 'store/base.html' %} 
+{% load static %}
 
 {% block title %}Thêm Sản Phẩm Mới{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-success text-white text-center py-3 rounded-top-4">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-cloud-arrow-up"></i> Tải Lên Sản Phẩm Mới</h5>
+<div class="container mt-5 mb-5 d-flex justify-content-center">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="width: 100%; max-width: 900px;">
+        
+        <div class="card-header bg-white border-bottom-dashed py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold text-success" style="font-size: 1.3rem;">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Tải Lên Sản Phẩm Mới
+            </h4>
+            <a href="{% url 'dashboard' %}" class="btn-close" aria-label="Close" title="Đóng"></a>
+        </div>
+
+        <div class="card-body p-4 bg-white">
+            <form action="" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control rounded-2" placeholder="Nhập tên sản phẩm..." required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Số lượng tồn kho <span class="text-danger">*</span></label>
+                        <input type="number" name="stock" class="form-control rounded-2" value="0" min="0" required>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    
-                    {% if form.errors %}
-                        <div class="alert alert-danger fw-bold">
-                            Vui lòng kiểm tra lại thông tin. Bạn đang nhập thiếu hoặc sai định dạng ở ô nào đó!
-                        </div>
-                    {% endif %}
 
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %} <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Tên sản phẩm *</label>
-                                {{ form.name }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Danh mục *</label>
-                                {{ form.category }}
-                            </div>
-                        </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Giá bán thực tế (VNĐ) <span class="text-danger">*</span></label>
+                        <input type="number" name="price" class="form-control rounded-2" placeholder="VD: 150000" min="0" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Giá gốc (để gạch ngang)</label>
+                        <input type="number" name="original_price" class="form-control rounded-2" placeholder="VD: 200000" min="0">
+                    </div>
+                </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Giá bán thực tế (VNĐ) *</label>
-                                {{ form.price }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Giá gốc (để gạch ngang)</label>
-                                {{ form.original_price }}
-                            </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Dung tích/Trọng lượng:</label>
+                        <input type="text" name="capacity" class="form-control rounded-2" placeholder="VD: 250ml hoặc 50g">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Xuất xứ:</label>
+                        <input type="text" name="origin" class="form-control rounded-2" placeholder="VD: Mỹ, Pháp, Hàn Quốc...">
+                    </div>
+                </div>
+                
+                <div class="row g-3 mb-4 bg-light p-3 rounded-3 border mx-0">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark mb-1 fw-bold">Danh mục <span class="text-danger">*</span></label>
+                        <select name="category" class="form-select rounded-2" required>
+                            <option value="1">Chăm sóc da</option>
+                            <option value="2">Trang điểm</option>
+                            <option value="3">Tóc & Body</option>
+                            <option value="4">Sức khỏe</option>
+                            <option value="5">Nước hoa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center pt-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="flashSaleSwitch" name="is_flash_sale" style="width: 2.5em; height: 1.25em; cursor:pointer;">
+                            <label class="form-check-label fw-bold ms-2 text-danger" for="flashSaleSwitch" style="margin-top: 3px; cursor:pointer;">
+                                🔥 Đưa vào Flash Sale
+                            </label>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Tồn kho *</label>
-                                {{ form.stock }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Hình ảnh sản phẩm</label>
-                                {{ form.image }}
-                            </div>
-                        </div>
+                <div class="mb-4">
+                    <label class="form-label text-dark mb-2 fw-bold">Mô tả chi tiết sản phẩm:</label>
+                    <textarea name="description" id="ckeditor-desc" class="form-control rounded-2" rows="10" placeholder="Nhập mô tả về thành phần, công dụng..."></textarea>
+                </div>
 
-                        <div class="mb-3 border p-3 rounded bg-light">
-                            <div class="form-check form-switch">
-                                {{ form.is_flash_sale }}
-                                <label class="form-check-label fw-bold text-danger ms-2" for="{{ form.is_flash_sale.id_for_label }}">
-                                    🔥 Đưa vào danh sách Flash Sale
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Mô tả chi tiết</label>
-                            {{ form.description }}
-                        </div>
-
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">Quay Lại</a>
-                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">LƯU VÀO KHO</button>
-                        </div>
-                    </form>
+                <div class="mb-3">
+                     <label class="form-label text-dark mb-1 fw-bold">Ảnh Chính (Chọn File HOẶC Nhập Link Mới):</label>
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-light"><i class="bi bi-upload text-secondary"></i></span>
+                    <input type="file" name="image" class="form-control" accept="image/*"> 
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-link-45deg text-primary"></i></span>
+                    <input type="text" name="image_url" class="form-control" placeholder="https://images..." value="{{ product.image_url|default:'' }}">
                 </div>
             </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-dark mb-1 fw-bold">Ảnh Phụ (Chọn NHIỀU File HOẶC Nhập Link):</label>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text bg-light" title="Tải file lên"><i class="bi bi-images text-secondary"></i></span>
+                        <input type="file" name="secondary_image" class="form-control" accept="image/*" multiple>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light" title="Dán link"><i class="bi bi-link-45deg text-primary"></i></span>
+                        <input type="text" name="secondary_image_links" class="form-control" placeholder="Các link cách nhau dấu phẩy: https://link1.com/a.jpg, https://link2.com/b.jpg">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light border px-4 py-2 fw-bold" style="color: #333;">
+                        Quay lại
+                    </a>
+                    <button type="submit" class="btn px-4 py-2 fw-bold text-white shadow-sm" style="background-color: #198754;">
+                        LƯU VÀO KHO
+                    </button>
+                </div>
+
+            </form>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        CKEDITOR.replace('ckeditor-desc', {
+            height: 300,
+            removeButtons: 'PasteFromWord,Image,Table,Source' // Ẩn bớt nút ko cần thiết cho gọn
+        });
+    });
+</script>
 {% endblock %}

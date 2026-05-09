@@ -1,0 +1,100 @@
+{% extends 'store/base.html' %} 
+{% load static %}
+
+{% block title %}Chi tiết Tài Khoản - {{ target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5 d-flex justify-content-center">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="width: 100%; max-width: 800px;">
+        
+        <div class="card-header bg-white border-bottom-dashed py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold text-primary" style="font-size: 1.3rem;">
+                <i class="bi bi-person-lines-fill me-2"></i> Chỉnh Sửa Thông Tin & Phân Quyền
+            </h4>
+            <a href="{% url 'dashboard' %}" class="btn-close" aria-label="Close" title="Đóng"></a>
+        </div>
+
+        <div class="card-body p-4 bg-white">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-bold mb-1">Tên đăng nhập <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="form-control" value="{{ target_user.username }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-bold mb-1">Số điện thoại</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                            <input type="text" name="phone" class="form-control" value="{{ profile.phone|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-dark fw-bold mb-1">Địa chỉ Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                        <input type="email" name="email" class="form-control" value="{{ target_user.email|default:'' }}">
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 mb-4">
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-dark fw-bold mb-1 text-uppercase text-danger"><i class="bi bi-shield-lock-fill"></i> Phân Quyền (Role) <span class="text-danger">*</span></label>
+                        <select name="role" id="roleSelect" class="form-select border-danger fw-bold" onchange="toggleBranchSelect()" required>
+                            <option value="SUPERADMIN" {% if profile.role == 'SUPERADMIN' %}selected{% endif %}>Admin Tổng (Toàn quyền)</option>
+                            <option value="BRANCHADMIN" {% if profile.role == 'BRANCHADMIN' %}selected{% endif %}>Admin Chi Nhánh</option>
+                            <option value="STAFF" {% if profile.role == 'STAFF' %}selected{% endif %}>Nhân Viên (Bán hàng)</option>
+                            <option value="CUSTOMER" {% if profile.role == 'CUSTOMER' %}selected{% endif %}>Khách Hàng</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6" id="branchDiv">
+                        <label class="form-label text-dark fw-bold mb-1 text-uppercase text-success"><i class="bi bi-geo-alt-fill"></i> Chi Nhánh Làm Việc</label>
+                        <select name="branch_id" class="form-select border-success fw-bold">
+                            <option value="">-- Chưa gắn chi nhánh --</option>
+                            {% for b in branches %}
+                                <option value="{{ b.id }}" {% if profile.branch and profile.branch.id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 pt-4 border-top">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light border px-4 py-2 fw-bold text-dark">
+                        Hủy Thay Đổi
+                    </a>
+                    <button type="submit" class="btn px-4 py-2 fw-bold text-white shadow-sm" style="background-color: #0d6efd;">
+                        <i class="bi bi-floppy-fill me-1"></i> Lưu Thông Tin & Quyền
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleBranchSelect() {
+        var role = document.getElementById('roleSelect').value;
+        var branchDiv = document.getElementById('branchDiv');
+        
+        // Nếu là Admin Chi nhánh hoặc Nhân viên -> Hiện ô chọn Chi nhánh
+        if (role === 'BRANCHADMIN' || role === 'STAFF') {
+            branchDiv.style.display = 'block';
+        } else {
+            // Khách hàng và Admin Tổng thì không cần chi nhánh -> Ẩn đi
+            branchDiv.style.display = 'none';
+        }
+    }
+    // Chạy hàm này ngay khi trang vừa load xong để kiểm tra trạng thái cũ
+    document.addEventListener("DOMContentLoaded", toggleBranchSelect);
+</script>
+{% endblock %}

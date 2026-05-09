@@ -1,276 +1,598 @@
-{% extends 'store/base.html' %} 
-
-{% block title %}Bảng Điều Khiển Quản Trị{% endblock %}
-
-{% block content %}
-<div class="container mt-4 mb-5">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-success"><i class="bi bi-speedometer2"></i> Dashboard Quản Trị</h2>
-        
-        <div class="d-flex gap-2">
-            <a href="{% url 'add_branch' %}" class="btn btn-outline-success rounded-pill fw-bold shadow-sm">
-                <i class="bi bi-geo-alt-fill"></i> Thêm Chi Nhánh
-            </a>
-            <a href="{% url 'inventory' %}" class="btn btn-info text-white rounded-pill fw-bold shadow-sm">
-                <i class="bi bi-box-arrow-up-right"></i> Quản lý tồn kho
-            </a>
-            <a href="{% url 'add_product' %}" class="btn btn-danger rounded-pill fw-bold shadow-sm">
-                <i class="bi bi-plus-circle"></i> Thêm Sản Phẩm Mới
-            </a>
-        </div>
-    </div>
-
-    <div class="row mb-4 g-3">
-        <div class="col-md-6">
-            <div class="card bg-success text-white border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div>
-                        <h6 class="text-uppercase fw-bold opacity-75">Tổng Sản Phẩm</h6>
-                        <h2 class="display-5 fw-bold mb-0">{{ total_products }}</h2>
-                    </div>
-                    <i class="bi bi-box-seam display-1 opacity-50"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card bg-warning text-dark border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body d-flex align-items-center justify-content-between p-4">
-                    <div>
-                        <h6 class="text-uppercase fw-bold opacity-75">Đơn Hàng Đã Nhận</h6>
-                        <h2 class="display-5 fw-bold mb-0">{{ total_orders }}</h2>
-                    </div>
-                    <i class="bi bi-receipt display-1 opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm rounded-4 mb-5">
-        <div class="card-header bg-warning text-dark border-bottom py-3 d-flex justify-content-between align-items-center" 
-             data-bs-toggle="collapse" data-bs-target="#collapseOrderList" style="cursor: pointer;" title="Nhấn để Ẩn/Hiện danh sách">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-receipt"></i> Danh Sách Đơn Hàng Mới Nhất</h5>
-            <i class="bi bi-chevron-expand fs-5 fw-bold"></i>
-        </div>
-        <div id="collapseOrderList" class="collapse">
-            <div class="card-body p-0 table-responsive">
-                <table class="table table-hover align-middle mb-0 text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Mã Đơn</th>
-                            <th class="text-start">Khách Hàng</th>
-                            <th>Số Điện Thoại</th>
-                            <th class="text-start">Sản Phẩm Mua</th>
-                            <th>Ngày Đặt</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for grp in orders %}
-                        <tr>
-                            <td class="text-muted fw-bold">#{{ grp.main.id }}</td>
-                            <td class="text-start">
-                                <b class="text-dark">{{ grp.main.customer_name }}</b><br>
-                                <small class="text-muted d-inline-block text-truncate" style="max-width: 200px;" title="{{ grp.main.address }}">{{ grp.main.address }}</small>
-                            </td>
-                            <td>{{ grp.main.phone }}</td>
-                            
-                            <td class="text-start fw-bold text-success">
-                                {{ grp.main.product.name }}
-                                {% if grp.extra_count > 0 %}
-                                    <span class="badge bg-danger rounded-pill shadow-sm ms-1" style="font-size: 0.75rem;">+{{ grp.extra_count }}</span>
-                                {% endif %}
-                            </td>
-                            
-                            <td>{{ grp.main.created_at|date:"d/m/Y H:i" }}</td>
-                            <td>
-                                <form action="{% url 'update_order_status' grp.main.id %}" method="POST" class="m-0">
-                                    {% csrf_token %}
-                                    <select name="status" class="form-select form-select-sm fw-bold border-0 shadow-sm mx-auto
-                                        {% if grp.main.status == 'Đã giao' %}bg-success text-white
-                                        {% elif grp.main.status == 'Đang giao' %}bg-info text-dark
-                                        {% else %}bg-warning text-dark{% endif %}"
-                                        onchange="this.form.submit()" 
-                                        style="border-radius: 20px; font-size: 0.85rem; cursor: pointer; width: 140px; text-align: center;">
-                                        
-                                        <option value="Đang xử lý" {% if grp.main.status == 'Đang xử lý' or not grp.main.status %}selected{% endif %}>⏳ Đang xử lý</option>
-                                        <option value="Đang giao" {% if grp.main.status == 'Đang giao' %}selected{% endif %}>🚚 Đang giao</option>
-                                        <option value="Đã giao" {% if grp.main.status == 'Đã giao' %}selected{% endif %}>✅ Đã giao</option>
-                                    </select>
-                                </form>
-                            </td>
-                            <td>
-                                <a href="{% url 'order_invoice' grp.main.id %}" target="_blank" class="btn btn-sm btn-dark rounded-3 shadow-sm" title="In Hóa Đơn">
-                                    <i class="bi bi-printer"></i> In Hóa Đơn
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                                Chưa có đơn hàng nào.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm rounded-4 mb-5">
-        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center"
-             data-bs-toggle="collapse" data-bs-target="#collapseProductList" style="cursor: pointer;" title="Nhấn để Ẩn/Hiện danh sách">
-            <h5 class="mb-0 fw-bold">Kho Hàng Hiện Tại (Sản Phẩm)</h5>
-            <i class="bi bi-chevron-expand fs-5 fw-bold text-muted"></i>
-        </div>
-        <div id="collapseProductList" class="collapse">
-            <div class="card-body p-0 table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">ID</th>
-                            <th>Hình Ảnh</th>
-                            <th>Tên Sản Phẩm</th>
-                            <th>Danh Mục</th> 
-                            <th>Giá Bán</th>
-                            <th>Tồn Kho</th> 
-                            <th>Flash Sale</th>
-                            <th class="text-center">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in products %}
-                        <tr>
-                            <td class="ps-4 text-muted">#{{ p.id }}</td>
-                            <td>
-                                {% if p.image %}
-                                    <img src="{{ p.image.url }}" alt="{{ p.name }}" class="rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
-                                {% else %}
-                                    <span class="badge bg-secondary">No IMG</span>
-                                {% endif %}
-                            </td>
-                            <td class="fw-bold">{{ p.name }}</td>
-                            
-                            <td>
-                                <span class="badge bg-light text-dark border">
-                                    {{ p.category.name|default:"Chưa phân loại" }}
-                                </span>
-                            </td>
-                            
-                            <td class="text-danger fw-bold">{{ p.price }} ₫</td>
-                            
-                            <td>
-                                {% if p.stock > 10 %}
-                                    <span class="badge bg-success">{{ p.stock }}</span>
-                                {% elif p.stock > 0 %}
-                                    <span class="badge bg-warning text-dark">{{ p.stock }}</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Hết hàng</span>
-                                {% endif %}
-                            </td>
-                            
-                            <td>
-                                {% if p.is_flash_sale %}
-                                    <span class="badge bg-danger"><i class="bi bi-lightning-fill"></i> Có</span>
-                                {% else %}
-                                    <span class="text-muted small">Không</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2 justify-content-center">
-                                    <a href="{% url 'edit_product' p.id %}" class="btn btn-outline-primary btn-sm rounded-3 shadow-sm" title="Sửa">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a href="{% url 'delete_product' p.id %}" onclick="return confirm('Xóa sản phẩm này?');" class="btn btn-outline-danger btn-sm rounded-3 shadow-sm" title="Xóa">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                                Chưa có sản phẩm nào. Hãy bấm "Thêm Sản Phẩm Mới".
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmetics Admin - Dashboard</title>
     
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center"
-             data-bs-toggle="collapse" data-bs-target="#collapseBranchList" style="cursor: pointer;" title="Nhấn để Ẩn/Hiện danh sách">
-            <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-geo-alt"></i> Hệ Thống Chi Nhánh Trên Bản Đồ</h5>
-            <i class="bi bi-chevron-expand fs-5 fw-bold text-primary"></i>
-        </div>
-        <div id="collapseBranchList" class="collapse">
-            <div class="card-body p-0 table-responsive">
-                <table class="table table-hover align-middle mb-0 text-center">
-                    <thead class="table-primary">
-                        <tr>
-                            <th class="ps-4">ID</th>
-                            <th>Hình Ảnh</th>
-                            <th class="text-start">Tên Chi Nhánh</th>
-                            <th class="text-start">Địa Chỉ</th>
-                            <th>Loại Trạm</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for b in branches %}
-                        <tr>
-                            <td class="ps-4 text-muted">#{{ b.id }}</td>
-                            <td>
-                                {% if b.image %}
-                                    <img src="{{ b.image.url }}" alt="{{ b.name }}" class="rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
-                                {% else %}
-                                    <span class="badge bg-secondary">No IMG</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-start fw-bold">{{ b.name }}</td>
-                            
-                            <td class="text-start text-muted" style="max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ b.address }}">
-                                {{ b.address }}
-                            </td>
-                            
-                            <td>
-                                {% if b.store_type == 'MAIN' %}
-                                    <span class="badge bg-danger"><i class="bi bi-star-fill"></i> Trụ sở chính</span>
-                                {% else %}
-                                    <span class="badge bg-success">Chi nhánh</span>
-                                {% endif %}
-                            </td>
-                            
-                            <td>
-                                <div class="d-flex gap-2 justify-content-center">
-                                    <a href="{% url 'edit_branch' b.id %}" class="btn btn-outline-primary btn-sm rounded-3 shadow-sm" title="Sửa">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a href="{% url 'delete_branch' b.id %}" onclick="return confirm('Bạn có chắc chắn muốn xóa chi nhánh này khỏi bản đồ?');" class="btn btn-outline-danger btn-sm rounded-3 shadow-sm" title="Xóa">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-shop fs-1 d-block mb-2 opacity-50"></i>
-                                Chưa có chi nhánh nào. Hãy bấm "Thêm Chi Nhánh".
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        
+        /* SIDEBAR CSS */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #2c343f; /* Màu xanh đen đậm */
+            color: #fff;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        .sidebar-brand {
+            padding: 20px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border-bottom: 1px solid #3d4652;
+            color: #fff;
+            text-decoration: none;
+        }
+        .sidebar-brand span { color: #e91e63; } /* Chữ Cosmetics màu hồng */
+        
+        .sidebar-menu { list-style: none; padding: 0; margin-top: 20px; flex-grow: 1; }
+        .sidebar-menu li { margin-bottom: 5px; }
+        .sidebar-menu a {
+            display: flex; align-items: center;
+            padding: 12px 20px;
+            color: #aeb5be;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .sidebar-menu a i { font-size: 1.2rem; margin-right: 15px; }
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: #e91e63; /* Nền hồng khi Active */
+            color: #fff;
+            border-left: 4px solid #fff;
+        }
+        
+        .btn-home { background-color: #788596; border: none; font-weight: bold; border-radius: 6px; }
+        .btn-home:hover { background-color: #5d6775; }
+
+        /* MAIN CONTENT CSS */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .page-header { background-color: #fff; padding: 20px 30px; border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .page-title { margin: 0; font-weight: 700; color: #333; font-size: 1.4rem; }
+        
+        .content-body { padding: 30px; flex-grow: 1; }
+
+        /* CARDS THỐNG KÊ */
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            border: 1px solid #f0f0f0;
+            border-left-width: 5px;
+            height: 100%;
+        }
+        .border-left-green { border-left-color: #4caf50; }
+        .border-left-orange { border-left-color: #ff9800; }
+        .border-left-purple { border-left-color: #9c27b0; }
+        .border-left-blue { border-left-color: #2196f3; }
+        .border-left-red { border-left-color: #f44336; }
+
+        .stat-card h6 { font-size: 0.9rem; color: #555; font-weight: 600; margin-bottom: 10px; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; }
+        .stat-card .desc { font-size: 0.75rem; color: #888; margin: 0; }
+
+        .text-green { color: #4caf50; }
+        .text-orange { color: #ff9800; }
+        .text-purple { color: #9c27b0; }
+        .text-blue { color: #2196f3; }
+        .text-red { color: #f44336; }
+
+        /* BIỂU ĐỒ & BẢNG */
+        .chart-container { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; margin-top: 20px; }
+        .tab-section { display: none; animation: fadeIn 0.3s; }
+        .tab-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .table-responsive { background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); padding: 15px; }
+
+        /* Nút Tạo Tài Khoản màu xanh lơ */
+        .btn-custom-cyan {
+            background-color: #30cce8; 
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 24px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(48, 204, 232, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-custom-cyan i { font-size: 1.3rem; margin-right: 8px; }
+        .btn-custom-cyan:hover {
+            background-color: #21b8d4;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(48, 204, 232, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="#" class="sidebar-brand">
+            <span>Cosmetics</span> Admin
+        </a>
+        <ul class="sidebar-menu">
+            <li><a class="nav-btn active" data-target="tab-report"><i class="bi bi-bar-chart-fill"></i> Báo cáo tổng quan</a></li>
+            
+            <li><a class="nav-btn" data-target="tab-products"><i class="bi bi-box-seam-fill"></i> Quản lý Sản phẩm</a></li>
+            <li><a class="nav-btn" data-target="tab-orders"><i class="bi bi-receipt"></i> Quản lý Đơn hàng</a></li>
+            
+            {% if current_role == 'SUPERADMIN' or current_role == 'BRANCHADMIN' %}
+            <li><a class="nav-btn" data-target="tab-branches"><i class="bi bi-geo-alt-fill"></i> Hệ thống Chi nhánh</a></li>
+            {% endif %}
+
+            {% if current_role == 'SUPERADMIN' %}
+            <li><a class="nav-btn" data-target="tab-users"><i class="bi bi-people-fill"></i> Quản lý Phân quyền</a></li>
+            {% endif %}
+        </ul>
+        <div class="p-3">
+            <div class="text-white small mb-2 text-center">Đang đăng nhập quyền: <br><b class="text-warning">{{ current_role }}</b></div>
+            <a href="{% url 'landing' %}" class="btn btn-home w-100 text-white"><i class="bi bi-arrow-left-circle me-2"></i> Về Trang Chủ</a>
         </div>
     </div>
-</div> 
-{% endblock %}
+
+    <div class="main-content">
+        <div class="page-header">
+            <h3 class="page-title" id="page-title-text">Quản lý Báo cáo</h3>
+        </div>
+
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="content-body">
+            
+            <div id="tab-report" class="tab-section active">
+                <h5 class="fw-bold mb-4 text-dark">Báo Cáo & Phân Tích Hoạt Động</h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="stat-card border-left-green">
+                            <h6>Doanh Thu Thực Tế</h6>
+                            <div class="value text-green">{{ total_revenue|default:"0" }} ₫</div>
+                            <p class="desc">(Chỉ tính đơn hoàn thành)</p>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="stat-card border-left-orange">
+                            <h6>Đơn Chờ Xử Lý</h6>
+                            <div class="value text-orange">{{ pending_orders|default:"0" }} đơn</div>
+                            <p class="desc">Cần xác nhận ngay</p>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="stat-card border-left-purple">
+                            <h6>Đơn Xuất Kho</h6>
+                            <div class="value text-purple">{{ shipping_orders|default:"0" }} đơn</div>
+                            <p class="desc">Đang trên đường giao</p>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="stat-card border-left-blue">
+                            <h6>Đơn Hoàn Thành</h6>
+                            <div class="value text-blue">{{ completed_orders|default:"0" }} đơn</div>
+                            <p class="desc">Giao hàng thành công</p>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="stat-card border-left-red">
+                            <h6>Đơn Trả Hàng / Hủy</h6>
+                            <div class="value text-red">{{ cancelled_orders|default:"0" }} đơn</div>
+                            <p class="desc">Giao thất bại hoặc bị hủy</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold text-dark m-0">Biểu đồ Doanh Thu</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm shadow-sm"><option>Theo Ngày (Tuần này)</option></select>
+                            <select class="form-select form-select-sm shadow-sm"><option>Biểu đồ Cột</option></select>
+                        </div>
+                    </div>
+                    <div style="height: 350px; width: 100%;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-products" class="tab-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-box-seam text-danger me-2"></i>Kho Hàng Hiện Tại ({{ total_products }} SP)</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn fw-bold text-white shadow-sm" style="background-color: #198754;" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                            <i class="bi bi-file-earmark-excel-fill me-1"></i> Nhập từ Excel
+                        </button>
+                        <a href="{% url 'add_product' %}" class="btn fw-bold text-white shadow-sm" style="background-color: #e91e63;">
+                            <i class="bi bi-plus-circle me-1"></i> Thêm Sản Phẩm Mới
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted small text-uppercase">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Giá bán</th>
+                                <th>Tồn kho</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in products %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{% if p.image %}{{ p.image.url }}{% elif p.image_url %}{{ p.image_url }}{% else %}https://dummyimage.com/50x50/ccc/000.png{% endif %}" width="40" height="40" class="rounded me-3 border" style="object-fit: contain;">
+                                        <b class="text-dark">{{ p.name }}</b>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ p.category.name }}</span></td>
+                                <td class="text-danger fw-bold">{{ p.price }} ₫</td>
+                                <td>
+                                    {% if p.stock > 10 %}<span class="badge bg-success">{{ p.stock }}</span>
+                                    {% elif p.stock > 0 %}<span class="badge bg-warning text-dark">{{ p.stock }}</span>
+                                    {% else %}<span class="badge bg-danger">Hết hàng</span>{% endif %}
+                                </td>
+                                <td>{% if p.is_flash_sale %}<span class="badge bg-danger"><i class="bi bi-lightning-fill"></i> Flash Sale</span>{% endif %}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'edit_product' p.id %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Sửa"><i class="bi bi-pencil-fill"></i></a>
+                                    <a href="{% url 'delete_product' p.id %}" class="btn btn-sm btn-outline-danger rounded-circle" title="Xóa"><i class="bi bi-trash-fill"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Chưa có sản phẩm nào trong kho.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-orders" class="tab-section">
+                <h5 class="fw-bold mb-4"><i class="bi bi-receipt text-warning me-2"></i>Danh Sách Đơn Hàng Mới Nhất</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted small text-uppercase">
+                            <tr>
+                                <th>Mã ĐH / Thời gian</th>
+                                <th>Khách hàng</th>
+                                <th>Sản phẩm / Tổng tiền</th>
+                                <th>Địa chỉ giao</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">In Hóa đơn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for group in orders %}
+                            <tr>
+                                <td>
+                                    <span class="fw-bold text-primary">#ORD-{{ group.main.id|stringformat:"04d" }}</span><br>
+                                    <small class="text-muted">{{ group.main.created_at|date:"d/m/Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <b class="text-dark">{{ group.main.customer_name }}</b><br>
+                                    <small class="text-muted"><i class="bi bi-telephone-fill"></i> {{ group.main.phone }}</small>
+                                </td>
+                                <td>
+                                    <b class="text-dark">{{ group.main.product.name }}</b>
+                                    {% if group.extra_count > 0 %}<br><span class="badge bg-info text-dark">+ {{ group.extra_count }} món khác</span>{% endif %}
+                                </td>
+                                <td><small>{{ group.main.address|truncatechars:50 }}</small></td>
+                                <td>
+                                    <form action="{% url 'update_order_status' group.main.id %}" method="POST" class="d-flex align-items-center">
+                                        {% csrf_token %}
+                                        <select name="status" class="form-select form-select-sm shadow-sm rounded-pill fw-bold {% if group.main.status == 'Đang xử lý' %}text-warning border-warning{% elif group.main.status == 'Đang giao' %}text-primary border-primary{% elif group.main.status == 'Đã hủy' %}text-danger border-danger{% else %}text-success border-success{% endif %}" onchange="this.form.submit()">
+                                            <option value="Đang xử lý" {% if group.main.status == 'Đang xử lý' %}selected{% endif %}>⏳ Đang xử lý</option>
+                                            <option value="Đang giao" {% if group.main.status == 'Đang giao' %}selected{% endif %}>🚚 Đang giao</option>
+                                            <option value="Đã giao" {% if group.main.status == 'Đã giao' %}selected{% endif %}>✅ Đã giao</option>
+                                            <option value="Đã hủy" {% if group.main.status == 'Đã hủy' %}selected{% endif %}>❌ Đã hủy</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'order_invoice' group.main.id %}" class="btn btn-sm btn-dark rounded-pill fw-bold px-3 shadow-sm"><i class="bi bi-printer-fill"></i> IN BILL</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Chưa có đơn đặt hàng nào.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-branches" class="tab-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-geo-alt-fill text-success me-2"></i>Hệ Thống Chi Nhánh Trên Bản Đồ</h5>
+                    <a href="{% url 'add_branch' %}" class="btn btn-outline-success fw-bold rounded-pill shadow-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Thêm Chi Nhánh Mới
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted small text-uppercase">
+                            <tr>
+                                <th>Hình ảnh</th>
+                                <th>Tên Chi Nhánh</th>
+                                <th>Địa chỉ / Tọa độ</th>
+                                <th>Loại Cửa Hàng</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in branches %}
+                            <tr>
+                                <td>
+                                    <img src="{% if b.image %}{{ b.image.url }}{% else %}https://dummyimage.com/60x60/ccc/000.png{% endif %}" width="60" height="60" class="rounded border" style="object-fit: cover;">
+                                </td>
+                                <td><b class="text-dark">{{ b.name }}</b></td>
+                                <td>
+                                    <small class="d-block text-muted mb-1">{{ b.address }}</small>
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-pin-map-fill text-danger"></i> {{ b.latitude|floatformat:4 }}, {{ b.longitude|floatformat:4 }}</span>
+                                </td>
+                                <td>
+                                    {% if b.store_type == 'MAIN' %}<span class="badge bg-danger">Trụ sở chính</span>
+                                    {% else %}<span class="badge bg-success">Chi nhánh nhỏ</span>{% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'edit_branch' b.id %}" class="btn btn-sm btn-outline-primary rounded-circle"><i class="bi bi-pencil-fill"></i></a>
+                                    <a href="{% url 'delete_branch' b.id %}" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash-fill"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Chưa có dữ liệu chi nhánh.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-users" class="tab-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-info me-2"></i>Quản Lý & Phân Quyền Tài Khoản</h5>
+                    {% if current_role == 'SUPERADMIN' %}
+                    <button class="btn-custom-cyan" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                        <i class="bi bi-person-plus-fill"></i> Tạo Tài Khoản Nội Bộ
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted small text-uppercase">
+                            <tr>
+                                <th>Tên Đăng Nhập</th>
+                                <th>Email / SĐT</th>
+                                <th>Vai Trò (Role)</th>
+                                <th>Chi Nhánh Quản Lý</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for profile in users_list %}
+                            <tr>
+                                <td>
+                                    <b class="text-dark">{{ profile.user.username }}</b>
+                                    {% if profile.user.is_superuser %}
+                                        <span class="badge bg-danger ms-2">ROOT</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="d-block">{{ profile.user.email|default:"Chưa có Email" }}</small>
+                                    <small class="text-muted"><i class="bi bi-telephone-fill"></i> {{ profile.phone|default:"Trống" }}</small>
+                                </td>
+                                <td>
+                                    {% if profile.role == 'SUPERADMIN' %}<span class="badge bg-danger">Admin Tổng</span>
+                                    {% elif profile.role == 'BRANCHADMIN' %}<span class="badge bg-primary">Admin Chi Nhánh</span>
+                                    {% elif profile.role == 'STAFF' %}<span class="badge bg-success">Nhân Viên</span>
+                                    {% else %}<span class="badge bg-secondary">Khách Hàng</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if profile.branch %}<b class="text-dark">{{ profile.branch.name }}</b>
+                                    {% else %}<span class="text-muted fst-italic">Toàn hệ thống</span>{% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if current_role == 'SUPERADMIN' %}
+                                    <a href="{% url 'edit_user' profile.user.id %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Sửa phân quyền & Thông tin"><i class="bi bi-shield-lock-fill"></i></a>
+                                    <form action="{% url 'delete_user' profile.user.id %}" method="POST" class="d-inline" onsubmit="return confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản {{ profile.user.username }} không? Hành động này không thể hoàn tác!');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Xóa tài khoản">
+                                      <i class="bi bi-person-x-fill"></i>
+                                    </button>
+                                     </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Chưa có dữ liệu hồ sơ người dùng.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header bg-info text-white border-0 rounded-top-4">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill"></i> Tạo Tài Khoản Nội Bộ</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <form action="{% url 'create_internal_user' %}" method="POST">
+                                {% csrf_token %}
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="small fw-bold text-muted mb-1">Tên đăng nhập *</label>
+                                        <input type="text" name="username" class="form-control" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small fw-bold text-muted mb-1">Mật khẩu *</label>
+                                        <input type="password" name="password" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="small fw-bold text-muted mb-1">Số điện thoại</label>
+                                        <input type="text" name="phone" class="form-control">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small fw-bold text-muted mb-1">Email</label>
+                                        <input type="email" name="email" class="form-control">
+                                    </div>
+                                </div>
+                                <hr class="opacity-25 my-3">
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-muted mb-1">Phân quyền (Role) *</label>
+                                    <select name="role" class="form-select fw-bold" style="color: #e81e63;" required>
+                                        <option value="STAFF">Nhân viên cửa hàng</option>
+                                        <option value="BRANCHADMIN">Admin Chi Nhánh</option>
+                                        <option value="SUPERADMIN">Admin Tổng (Toàn quyền)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="small fw-bold text-muted mb-1">Chỉ định Chi Nhánh làm việc</label>
+                                    <select name="branch_id" class="form-select">
+                                        <option value="">-- Không chỉ định (Toàn hệ thống) --</option>
+                                        {% for b in branches %}
+                                            <option value="{{ b.id }}">{{ b.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted fst-italic" style="font-size: 0.75rem;">(Bắt buộc chọn nếu là Admin Chi nhánh hoặc Nhân viên)</small>
+                                </div>
+                                <button type="submit" class="btn btn-info text-white w-100 rounded-pill fw-bold shadow-sm">Tạo Tài Khoản</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header bg-success text-white border-0 rounded-top-4">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel-fill"></i> Nhập Sản Phẩm Hàng Loạt</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <form action="{% url 'import_products_excel' %}" method="POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-muted">Chọn file Excel (.xlsx)</label>
+                                    <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls" required>
+                                </div>
+                                <div class="alert alert-warning small">
+                                    <strong>Quy tắc đặt tên cột ở Dòng 1 trong Excel:</strong><br>
+                                    <i>Tên sản phẩm | Giá bán | Giá gốc | Tồn kho | Tên danh mục | Dung tích | Nhà sản xuất | Xuất xứ | Link ảnh | Mô tả</i>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">Bắt Đầu Tải Dữ Liệu Lên</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Logic chuyển Tab
+            const navBtns = document.querySelectorAll('.nav-btn');
+            const tabSections = document.querySelectorAll('.tab-section');
+            const pageTitle = document.getElementById('page-title-text');
+
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Xóa active ở tất cả nút
+                    navBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Đổi tiêu đề
+                    pageTitle.innerText = this.innerText;
+
+                    // Ẩn tất cả section, hiện section được click
+                    const targetId = this.getAttribute('data-target');
+                    tabSections.forEach(sec => sec.classList.remove('active'));
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // Logic vẽ Biểu đồ Doanh Thu bằng Chart.js
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'],
+                    datasets: [{
+                        label: 'Doanh Thu (VNĐ)',
+                        data: [150000, 320000, 210000, 550000, 420000, 880000, 1250000],
+                        backgroundColor: '#e91e63', // Màu hồng
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if(value >= 1000000) return value/1000000 + 'M';
+                                    if(value >= 1000) return value/1000 + 'K';
+                                    return value;
+                                }
+                            },
+                            grid: { borderDash: [5, 5] }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10 } }
+                    }
+                }
+            });
+        });
+    </script>
+  </body>
+</html>

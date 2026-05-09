@@ -19,22 +19,64 @@
                             <label class="form-label fw-bold">Tên đăng nhập</label>
                             <input type="text" name="username" class="form-control rounded-3" required autofocus>
                         </div>
-                        <div class="mb-4">
+                        
+                        <div class="mb-3">
                             <label class="form-label fw-bold">Mật khẩu</label>
-                            <input type="password" name="password" class="form-control rounded-3" required>
+                            <div class="input-group shadow-sm">
+                                <input type="password" name="password" id="passwordField" class="form-control border-end-0" required style="border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem;">
+                                <span class="input-group-text bg-white border-start-0" id="togglePassword" style="cursor: pointer; border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem;">
+                                    <i class="bi bi-eye-slash text-muted" id="eyeIcon"></i>
+                                </span>
+                            </div>
                         </div>
+
+                        <!-- KHU VỰC NÚT QUÊN MẬT KHẨU -->
+                        <div class="d-flex justify-content-end mb-4">
+                            <a href="{% url 'password_reset' %}" class="text-success text-decoration-none small fw-bold hover-zoom">
+                                Quên mật khẩu?
+                            </a>
+                        </div>
+                        
                         <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill shadow-sm py-2">ĐĂNG NHẬP</button>
         
-        <div class="text-center mt-4">
-            <span class="text-muted">Chưa có tài khoản?</span>
-            <a href="{% url 'register' %}" class="text-success fw-bold text-decoration-none hover-zoom d-inline-block ms-1">
-                Đăng ký ngay
-            </a>
-        </div>
+                        <div class="text-center mt-4">
+                            <span class="text-muted">Chưa có tài khoản?</span>
+                            <a href="{% url 'register' %}" class="text-success fw-bold text-decoration-none hover-zoom d-inline-block ms-1">
+                                Đăng ký ngay
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Kịch bản JS xử lý ẩn/hiện mật khẩu -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordField = document.getElementById('passwordField');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        togglePassword.addEventListener('click', function () {
+            // Chuyển đổi type giữa 'password' và 'text'
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            // Chuyển đổi icon mắt nhắm / mở
+            eyeIcon.classList.toggle('bi-eye-slash');
+            eyeIcon.classList.toggle('bi-eye');
+            
+            // Đổi màu icon khi click để tăng trải nghiệm (tùy chọn)
+            if(type === 'text') {
+                eyeIcon.classList.remove('text-muted');
+                eyeIcon.classList.add('text-success');
+            } else {
+                eyeIcon.classList.remove('text-success');
+                eyeIcon.classList.add('text-muted');
+            }
+        });
+    });
+</script>
 {% endblock %}
